@@ -63,7 +63,7 @@ type GasRegister interface {
 	CompileCosts(byteLength int) sdk.Gas
 	// InstantiateContractCosts costs when interacting with a wasm contract
 	InstantiateContractCosts(pinned bool, msgLen int) sdk.Gas
-	// ReplyCosts costs to to handle a message reply
+	// ReplyCosts costs to handle a message reply
 	ReplyCosts(pinned bool, reply wasmvmtypes.Reply) sdk.Gas
 	// EventCosts costs to persist an event
 	EventCosts(attrs []wasmvmtypes.EventAttribute, events wasmvmtypes.Events) sdk.Gas
@@ -162,7 +162,7 @@ func (g WasmGasRegister) InstantiateContractCosts(pinned bool, msgLen int) sdk.G
 	return g.c.InstanceCost + dataCosts
 }
 
-// ReplyCosts costs to to handle a message reply
+// ReplyCosts costs to handle a message reply
 func (g WasmGasRegister) ReplyCosts(pinned bool, reply wasmvmtypes.Reply) sdk.Gas {
 	var eventGas sdk.Gas
 	msgLen := len(reply.Result.Err)
