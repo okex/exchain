@@ -161,7 +161,7 @@ func (st StateTransition) TransitionDb(ctx sdk.Context, config ChainConfig) (exe
 		ctx.GasMeter().ConsumeGas(cost-consumedGas, "Intrinsic gas match")
 	}
 
-	// This gas limit the the transaction gas limit with intrinsic gas subtracted
+	// This gas limit the transaction gas limit with intrinsic gas subtracted
 	gasLimit := st.GasLimit - ctx.GasMeter().GasConsumed()
 
 	// This gas meter is set up to consume gas from gaskv during evm execution and be ignored

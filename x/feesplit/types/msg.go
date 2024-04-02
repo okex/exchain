@@ -61,7 +61,7 @@ func NewMsgRegisterFeeSplit(
 // Route returns the name of the module
 func (msg MsgRegisterFeeSplit) Route() string { return RouterKey }
 
-// Type returns the the action
+// Type returns the action
 func (msg MsgRegisterFeeSplit) Type() string { return TypeMsgRegisterFeeSplit }
 
 // ValidateBasic runs stateless checks on the message
@@ -133,7 +133,7 @@ func NewMsgUpdateFeeSplit(
 // Route returns the name of the module
 func (msg MsgUpdateFeeSplit) Route() string { return RouterKey }
 
-// Type returns the the action
+// Type returns the action
 func (msg MsgUpdateFeeSplit) Type() string { return TypeMsgUpdateFeeSplit }
 
 // ValidateBasic runs stateless checks on the message
