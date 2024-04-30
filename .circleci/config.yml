@@ -15,7 +15,6 @@ commands:
           keys:
             - go-src-v1-{{ .Revision }}
       - checkout
-      - run: echo "Debugging ci"
       - restore_cache:
           name: "Restore go modules cache"
           keys:
