@@ -35,7 +35,6 @@ jobs:
           name: Restore go modules cache
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
-      - run: echo "Debugging ci"
       - run: 
           name: run go mod tidy first
           command: go mod tidy
