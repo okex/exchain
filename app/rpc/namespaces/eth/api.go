@@ -1146,7 +1146,7 @@ func (api *PublicEthereumAPI) simDoCall(args rpctypes.CallArgs, cap uint64) (uin
 }
 
 // EstimateGas returns an estimate of gas usage for the given smart contract call.
-func (api *PublicEthereumAPI) EstimateGas(args rpctypes.CallArgs, blockNrOrHash rpctypes.BlockNumberOrHash) (hexutil.Uint64, error) {
+func (api *PublicEthereumAPI) EstimateGas(args rpctypes.CallArgs, blockNrOrHash *rpctypes.BlockNumberOrHash) (hexutil.Uint64, error) {
 	monitor := monitor.GetMonitor("eth_estimateGas", api.logger, api.Metrics).OnBegin()
 	defer monitor.OnEnd("args", args)
 	rateLimiter := api.GetRateLimiter("eth_estimateGas")
@@ -1715,7 +1715,7 @@ func (api *PublicEthereumAPI) generateFromArgs(args rpctypes.SendTxArgs) (*evmty
 			Value:    args.Value,
 			Data:     &input,
 		}
-		gl, err := api.EstimateGas(callArgs, rpctypes.BlockNumberOrHash{})
+		gl, err := api.EstimateGas(callArgs, nil)
 		if err != nil {
 			return nil, err
 		}
