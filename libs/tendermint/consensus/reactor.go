@@ -343,6 +343,8 @@ func (conR *Reactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
 		return
 	}
 
+	conR.Logger.Info("consensus receive", "remote-ip:", src.RemoteIP().String(), "socket-ip", src.SocketAddr().IP.String())
+
 	msg, err := decodeMsg(msgBytes)
 	if err != nil {
 		conR.Logger.Error("Error decoding message", "src", src, "chId", chID, "msg", msg, "err", err, "bytes", msgBytes)
