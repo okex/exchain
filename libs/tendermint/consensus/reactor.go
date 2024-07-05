@@ -3,7 +3,6 @@ package consensus
 import (
 	"bytes"
 	"fmt"
-	cfg "github.com/okex/exchain/libs/tendermint/config"
 	"reflect"
 	"sync"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	amino "github.com/tendermint/go-amino"
 
+	cfg "github.com/okex/exchain/libs/tendermint/config"
 	cstypes "github.com/okex/exchain/libs/tendermint/consensus/types"
 	"github.com/okex/exchain/libs/tendermint/crypto"
 	"github.com/okex/exchain/libs/tendermint/libs/automation"
