@@ -137,6 +137,8 @@ type OecConfig struct {
 	maxSubscriptionClients int
 
 	maxTxLimitPerPeer uint64
+
+	consensusIPWhitelist []string
 }
 
 const (
@@ -175,6 +177,7 @@ const (
 	FlagCsTimeoutPrecommit         = "consensus.timeout_precommit"
 	FlagCsTimeoutPrecommitDelta    = "consensus.timeout_precommit_delta"
 	FlagCsTimeoutCommit            = "consensus.timeout_commit"
+	FlagConsensusIPWhitelist       = "consensus.ip_whitelist"
 	FlagEnableHasBlockPartMsg      = "enable-blockpart-ack"
 	FlagDebugGcInterval            = "debug.gc-interval"
 	FlagCommitGapOffset            = "commit-gap-offset"
@@ -331,6 +334,7 @@ func (c *OecConfig) loadFromConfig() {
 	c.SetCommitGapHeight(viper.GetInt64(server.FlagCommitGapHeight))
 	c.SetSentryAddrs(viper.GetString(FlagSentryAddrs))
 	c.SetNodeKeyWhitelist(viper.GetString(FlagNodeKeyWhitelist))
+	c.SetConsensusIPWhitelist(viper.GetString(FlagConsensusIPWhitelist))
 	c.SetEnableWtx(viper.GetBool(FlagEnableWrappedTx))
 	c.SetEnableAnalyzer(viper.GetBool(trace.FlagEnableAnalyzer))
 	c.SetDeliverTxsExecuteMode(viper.GetInt(state.FlagDeliverTxsExecMode))
@@ -511,6 +515,8 @@ func (c *OecConfig) updateFromKVStr(k, v string) {
 		c.SetPendingPoolBlacklist(v)
 	case FlagNodeKeyWhitelist:
 		c.SetNodeKeyWhitelist(v)
+	case FlagConsensusIPWhitelist:
+		c.SetConsensusIPWhitelist(v)
 	case FlagMempoolCheckTxCost:
 		r, err := strconv.ParseBool(v)
 		if err != nil {
@@ -810,6 +816,10 @@ func (c *OecConfig) GetNodeKeyWhitelist() []string {
 	return c.nodeKeyWhitelist
 }
 
+func (c *OecConfig) GetConsensusIPWhitelist() []string {
+	return c.consensusIPWhitelist
+}
+
 func (c *OecConfig) GetMempoolCheckTxCost() bool {
 	return c.mempoolCheckTxCost
 }
@@ -828,6 +838,13 @@ func (c *OecConfig) SetNodeKeyWhitelist(value string) {
 		} else {
 			c.nodeKeyWhitelist = append(c.nodeKeyWhitelist, id)
 		}
+	}
+}
+
+func (c *OecConfig) SetConsensusIPWhitelist(value string) {
+	ipList := resolveNodeKeyWhitelist(value)
+	for _, ip := range ipList {
+		c.consensusIPWhitelist = append(c.consensusIPWhitelist, strings.TrimSpace(ip))
 	}
 }
 
