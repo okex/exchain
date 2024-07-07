@@ -165,15 +165,30 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		return nil, ErrNoValidatorFound(msg.ValidatorAddress.String())
 	}
 
-	// replace all editable fields (clients should autofill existing values)
-	description, err := validator.Description.UpdateDescription(msg.Description)
-	if err != nil {
-		return nil, err
+	if msg.Description != (Description{}) {
+		// replace all editable fields (clients should autofill existing values)
+		description, err := validator.Description.UpdateDescription(msg.Description)
+		if err != nil {
+			return nil, err
+		}
+
+		validator.Description = description
+		k.SetValidator(ctx, validator)
 	}
+	if msg.PubKey != nil && len(msg.PubKey.Bytes()) != 0 {
+		if validator.ConsPubKey.Equals(msg.PubKey) {
+			return nil, ErrPubkeyEqual(msg.PubKey.Address().String())
+		}
+		k.SetChangePubkey(ctx, validator.OperatorAddress, validator.GetConsPubKey())
+		oldConsAddr := validator.GetConsAddr()
 
-	validator.Description = description
-
-	k.SetValidator(ctx, validator)
+		validator.ConsPubKey = msg.PubKey
+		newConsAddr := validator.GetConsAddr()
+		k.SetValidator(ctx, validator)
+		k.SetValidatorByConsAddr(ctx, validator)
+		k.DeleteValidatorByConsAddr(ctx, oldConsAddr)
+		k.AfterValidatorPubkeyChanged(ctx, oldConsAddr, newConsAddr, msg.PubKey)
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(types.EventTypeEditValidator,

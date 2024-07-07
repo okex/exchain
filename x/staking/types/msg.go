@@ -132,13 +132,15 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 type MsgEditValidator struct {
 	Description
 	ValidatorAddress sdk.ValAddress `json:"address" yaml:"address"`
+	PubKey           crypto.PubKey  `json:"pubkey" yaml:"pubkey"`
 }
 
 // NewMsgEditValidator creates a msg of edit-validator
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description) MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, pubKey crypto.PubKey) MsgEditValidator {
 	return MsgEditValidator{
 		Description:      description,
 		ValidatorAddress: valAddr,
+		PubKey:           pubKey,
 	}
 }
 
@@ -161,8 +163,8 @@ func (msg MsgEditValidator) ValidateBasic() error {
 		return ErrNilValidatorAddr()
 	}
 
-	if msg.Description == (Description{}) {
-		return ErrNilValidatorAddr()
+	if msg.Description == (Description{}) && (msg.PubKey == nil || len(msg.PubKey.Bytes()) == 0) {
+		return ErrDescriptionAndPubkeyIsEmpty()
 	}
 
 	return nil

@@ -106,6 +106,16 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				Details:  viper.GetString(FlagDetails),
 			}
 
+			pkStr := viper.GetString(FlagPubKey)
+			var pk crypto.PubKey = nil
+			var err error
+			if pkStr != "" {
+				pk, err = types.GetConsPubKeyBech32(pkStr)
+				if err != nil {
+					return err
+				}
+			}
+
 			// TODO: recover the msd modification later
 			//var newMinSelfDelegation *sdk.Int
 			//
@@ -122,7 +132,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 			//}
 			//
 			//msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfDelegation)
-			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description)
+			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, pk)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
@@ -130,6 +140,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(fsDescriptionEdit)
+	cmd.Flags().String(FlagPubKey, "", "The Bech32 encoded PubKey of the validator")
 	//cmd.Flags().AddFlagSet(fsCommissionUpdate)
 
 	return cmd
@@ -138,11 +149,11 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 //__________________________________________________________
 
 var (
-//defaultTokens                  = sdk.TokensFromConsensusPower(100)
-//defaultAmount                  = defaultTokens.String() + sdk.DefaultBondDenom
-//defaultCommissionRate          = "0.1"
-//defaultCommissionMaxRate       = "0.2"
-//defaultCommissionMaxChangeRate = "0.01"
+// defaultTokens                  = sdk.TokensFromConsensusPower(100)
+// defaultAmount                  = defaultTokens.String() + sdk.DefaultBondDenom
+// defaultCommissionRate          = "0.1"
+// defaultCommissionMaxRate       = "0.2"
+// defaultCommissionMaxChangeRate = "0.01"
 )
 
 // CreateValidatorMsgHelpers returns the flagset, particular flags, and a description of defaults

@@ -4,6 +4,7 @@ import (
 	sdk "github.com/okex/exchain/libs/cosmos-sdk/types"
 	authexported "github.com/okex/exchain/libs/cosmos-sdk/x/auth/exported"
 	supplyexported "github.com/okex/exchain/libs/cosmos-sdk/x/supply/exported"
+	"github.com/okex/exchain/libs/tendermint/crypto"
 	stakingexported "github.com/okex/exchain/x/staking/exported"
 )
 
@@ -74,6 +75,7 @@ type ValidatorSet interface {
 type StakingHooks interface {
 	// Must be called when a validator is created
 	AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress)
+	AfterValidatorPubkeyChanged(ctx sdk.Context, oldAddress sdk.ConsAddress, newAddress sdk.ConsAddress, newPubkey crypto.PubKey)
 	// Must be called when a validator's state changes
 	BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress)
 	// Must be called when a validator is deleted
