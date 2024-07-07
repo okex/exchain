@@ -175,7 +175,7 @@ func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 		SharesFromDefaultMSD, false)
 
 	// edit validator
-	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{Moniker: "moniker"})
+	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{Moniker: "moniker"}, nil)
 	require.Nil(t, msgEditValidator.ValidateBasic())
 
 	// no one could change msd
