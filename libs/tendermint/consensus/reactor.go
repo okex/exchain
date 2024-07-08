@@ -352,6 +352,7 @@ func (conR *Reactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
 	}
 	if !okIP {
 		conR.Logger.Error("consensus msg:IP not in whitelist", "IP", src.RemoteIP().String())
+		return
 	}
 
 	msg, err := decodeMsg(msgBytes)

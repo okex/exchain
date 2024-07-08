@@ -7,6 +7,7 @@ import (
 
 	amino "github.com/tendermint/go-amino"
 
+	cfg "github.com/okex/exchain/libs/tendermint/config"
 	clist "github.com/okex/exchain/libs/tendermint/libs/clist"
 	"github.com/okex/exchain/libs/tendermint/libs/log"
 	"github.com/okex/exchain/libs/tendermint/p2p"
@@ -63,6 +64,18 @@ func (evR *Reactor) AddPeer(peer p2p.Peer) {
 // Receive implements Reactor.
 // It adds any received evidence to the evpool.
 func (evR *Reactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
+	okIP := false
+	for _, ip := range cfg.DynamicConfig.GetConsensusIPWhitelist() {
+		if src.RemoteIP().String() == ip {
+			okIP = true
+			break
+		}
+	}
+	if !okIP {
+		evR.Logger.Error("consensus msg:IP not in whitelist", "IP", src.RemoteIP().String())
+		return
+	}
+
 	msg, err := decodeMsg(msgBytes)
 	if err != nil {
 		evR.Logger.Error("Error decoding message", "src", src, "chId", chID, "msg", msg, "err", err, "bytes", msgBytes)
