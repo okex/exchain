@@ -138,7 +138,8 @@ type OecConfig struct {
 
 	maxTxLimitPerPeer uint64
 
-	consensusIPWhitelist []string
+	enableConsensusIPWhitelist bool
+	consensusIPWhitelist       []string
 }
 
 const (
@@ -177,6 +178,7 @@ const (
 	FlagCsTimeoutPrecommit         = "consensus.timeout_precommit"
 	FlagCsTimeoutPrecommitDelta    = "consensus.timeout_precommit_delta"
 	FlagCsTimeoutCommit            = "consensus.timeout_commit"
+	FlagEnableConsensusIPWhitelist = "consensus.enable_ip_whitelist"
 	FlagConsensusIPWhitelist       = "consensus.ip_whitelist"
 	FlagEnableHasBlockPartMsg      = "enable-blockpart-ack"
 	FlagDebugGcInterval            = "debug.gc-interval"
@@ -334,6 +336,7 @@ func (c *OecConfig) loadFromConfig() {
 	c.SetCommitGapHeight(viper.GetInt64(server.FlagCommitGapHeight))
 	c.SetSentryAddrs(viper.GetString(FlagSentryAddrs))
 	c.SetNodeKeyWhitelist(viper.GetString(FlagNodeKeyWhitelist))
+	c.SetEnableConsensusIPWhitelist(viper.GetBool(FlagEnableConsensusIPWhitelist))
 	c.SetConsensusIPWhitelist(viper.GetString(FlagConsensusIPWhitelist))
 	c.SetEnableWtx(viper.GetBool(FlagEnableWrappedTx))
 	c.SetEnableAnalyzer(viper.GetBool(trace.FlagEnableAnalyzer))
@@ -515,6 +518,12 @@ func (c *OecConfig) updateFromKVStr(k, v string) {
 		c.SetPendingPoolBlacklist(v)
 	case FlagNodeKeyWhitelist:
 		c.SetNodeKeyWhitelist(v)
+	case FlagEnableConsensusIPWhitelist:
+		r, err := strconv.ParseBool(v)
+		if err != nil {
+			return
+		}
+		c.SetEnableConsensusIPWhitelist(r)
 	case FlagConsensusIPWhitelist:
 		c.SetConsensusIPWhitelist(v)
 	case FlagMempoolCheckTxCost:
@@ -816,6 +825,10 @@ func (c *OecConfig) GetNodeKeyWhitelist() []string {
 	return c.nodeKeyWhitelist
 }
 
+func (c *OecConfig) GetEnableConsensusIPWhitelist() bool {
+	return c.enableConsensusIPWhitelist
+}
+
 func (c *OecConfig) GetConsensusIPWhitelist() []string {
 	return c.consensusIPWhitelist
 }
@@ -839,6 +852,10 @@ func (c *OecConfig) SetNodeKeyWhitelist(value string) {
 			c.nodeKeyWhitelist = append(c.nodeKeyWhitelist, id)
 		}
 	}
+}
+
+func (c *OecConfig) SetEnableConsensusIPWhitelist(value bool) {
+	c.enableConsensusIPWhitelist = value
 }
 
 func (c *OecConfig) SetConsensusIPWhitelist(value string) {

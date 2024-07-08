@@ -343,16 +343,18 @@ func (conR *Reactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
 		return
 	}
 
-	okIP := false
-	for _, ip := range cfg.DynamicConfig.GetConsensusIPWhitelist() {
-		if src.RemoteIP().String() == ip {
-			okIP = true
-			break
+	if cfg.DynamicConfig.GetEnableConsensusIPWhitelist() {
+		okIP := false
+		for _, ip := range cfg.DynamicConfig.GetConsensusIPWhitelist() {
+			if src.RemoteIP().String() == ip {
+				okIP = true
+				break
+			}
 		}
-	}
-	if !okIP {
-		conR.Logger.Error("consensus msg:IP not in whitelist", "IP", src.RemoteIP().String())
-		return
+		if !okIP {
+			conR.Logger.Error("consensus msg:IP not in whitelist", "IP", src.RemoteIP().String())
+			return
+		}
 	}
 
 	msg, err := decodeMsg(msgBytes)

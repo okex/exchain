@@ -41,6 +41,7 @@ type IDynamicConfig interface {
 	GetMaxSubscriptionClients() int
 	GetPendingPoolBlacklist() string
 	GetMaxTxLimitPerPeer() uint64
+	GetEnableConsensusIPWhitelist() bool
 	GetConsensusIPWhitelist() []string
 }
 
@@ -234,6 +235,8 @@ func (d MockDynamicConfig) GetPendingPoolBlacklist() string {
 func (c MockDynamicConfig) GetMaxTxLimitPerPeer() uint64 {
 	return DefaultMempoolConfig().MaxTxLimitPerPeer
 }
+
+func (c MockDynamicConfig) GetEnableConsensusIPWhitelist() bool { return false }
 
 func (c MockDynamicConfig) GetConsensusIPWhitelist() []string {
 	return []string{}
