@@ -2,8 +2,8 @@ package ante_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"github.com/okex/exchain/libs/tendermint/crypto"
@@ -431,7 +431,7 @@ func TestVerifySig(t *testing.T) {
 }
 
 func NewSig(ctx sdk.Context, msgs []sdk.Msg, priv crypto.PrivKey, accNum uint64, seq uint64, fee types.StdFee) []types.StdSignature {
-	signBytes := types.StdSignBytes(ctx.ChainID(), accNum, seq, fee, msgs, "")
+	signBytes := types.StdSignBytes(ctx.ChainID(), accNum, seq, fee, msgs, "", 0)
 	sig, err := priv.Sign(signBytes)
 	if err != nil {
 		panic(err)

@@ -31,6 +31,7 @@ Venus4Height=0
 Venus5Height=0
 EarthHeight=0
 MarsHeight=0
+JupiterHeight=0
 
 LINK_STATICALLY = false
 cgo_flags=
@@ -53,6 +54,7 @@ ifeq ($(MAKECMDGOALS),mainnet)
    Venus3Height=15277000
    Venus5Height=17849000
    EarthHeight=18735000
+   JupiterHeight=0
 	
    WITH_ROCKSDB=true
 else ifeq ($(MAKECMDGOALS),testnet)
@@ -65,6 +67,7 @@ else ifeq ($(MAKECMDGOALS),testnet)
    EarthHeight=17364500
    Venus4Height=17531500
    Venus5Height=18861500
+   JupiterHeight=0
 
    WITH_ROCKSDB=true
 endif
@@ -120,7 +123,8 @@ ldflags = -X $(GithubTop)/okex/exchain/libs/cosmos-sdk/version.Version=$(Version
   -X $(GithubTop)/okex/exchain/libs/tendermint/types.MILESTONE_VENUS4_HEIGHT=$(Venus4Height) \
   -X $(GithubTop)/okex/exchain/libs/tendermint/types.MILESTONE_VENUS5_HEIGHT=$(Venus5Height) \
   -X $(GithubTop)/okex/exchain/libs/tendermint/types.MILESTONE_EARTH_HEIGHT=$(EarthHeight) \
-  -X $(GithubTop)/okex/exchain/libs/tendermint/types.MILESTONE_MARS_HEIGHT=$(MarsHeight)
+  -X $(GithubTop)/okex/exchain/libs/tendermint/types.MILESTONE_MARS_HEIGHT=$(MarsHeight) \
+  -X $(GithubTop)/okex/exchain/libs/tendermint/types.MILESTONE_JUPITER_NAME=$(JupiterHeight)
 
 
 ifeq ($(WITH_ROCKSDB),true)

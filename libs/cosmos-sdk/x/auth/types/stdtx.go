@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strings"
 
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -14,6 +15,7 @@ import (
 	"github.com/okex/exchain/libs/tendermint/crypto"
 	cryptoamino "github.com/okex/exchain/libs/tendermint/crypto/encoding/amino"
 	"github.com/okex/exchain/libs/tendermint/crypto/multisig"
+	tmtypes "github.com/okex/exchain/libs/tendermint/types"
 	"github.com/tendermint/go-amino"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -236,7 +238,7 @@ func (tx *StdTx) GetSignBytes(ctx sdk.Context, index int, acc exported.Account) 
 	}
 
 	return StdSignBytes(
-		chainID, accNum, acc.GetSequence(), tx.Fee, tx.Msgs, tx.Memo,
+		chainID, accNum, acc.GetSequence(), tx.Fee, tx.Msgs, tx.Memo, ctx.BlockHeight(),
 	)
 }
 
@@ -434,10 +436,14 @@ type StdSignDoc struct {
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
-func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
+func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, msgs []sdk.Msg, memo string, height int64) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
-		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
+		msgByte := json.RawMessage(msg.GetSignBytes())
+		if height > 0 && !tmtypes.HigherThanJupiter(height) && msg.Type() == "edit_validator" {
+			msgByte = []byte(strings.ReplaceAll(string(msgByte), `,"pubkey":null`, ""))
+		}
+		msgsBytes = append(msgsBytes, msgByte)
 	}
 	bz, err := ModuleCdc.MarshalJSON(StdSignDoc{
 		AccountNumber: accnum,
