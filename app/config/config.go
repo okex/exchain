@@ -138,8 +138,8 @@ type OecConfig struct {
 
 	maxTxLimitPerPeer uint64
 
-	enableConsensusIPWhitelist bool
-	consensusIPWhitelist       map[string]bool
+	enableP2PIPWhitelist bool
+	consensusIPWhitelist map[string]bool
 }
 
 const (
@@ -171,6 +171,7 @@ const (
 	FlagDynamicGpMaxTxNum          = "dynamic-gp-max-tx-num"
 	FlagEnableWrappedTx            = "enable-wtx"
 	FlagSentryAddrs                = "p2p.sentry_addrs"
+	FlagEnableP2PIPWhitelist       = "p2p.enable_ip_whitelist"
 	FlagCsTimeoutPropose           = "consensus.timeout_propose"
 	FlagCsTimeoutProposeDelta      = "consensus.timeout_propose_delta"
 	FlagCsTimeoutPrevote           = "consensus.timeout_prevote"
@@ -178,7 +179,6 @@ const (
 	FlagCsTimeoutPrecommit         = "consensus.timeout_precommit"
 	FlagCsTimeoutPrecommitDelta    = "consensus.timeout_precommit_delta"
 	FlagCsTimeoutCommit            = "consensus.timeout_commit"
-	FlagEnableConsensusIPWhitelist = "consensus.enable_ip_whitelist"
 	FlagConsensusIPWhitelist       = "consensus.ip_whitelist"
 	FlagEnableHasBlockPartMsg      = "enable-blockpart-ack"
 	FlagDebugGcInterval            = "debug.gc-interval"
@@ -336,7 +336,7 @@ func (c *OecConfig) loadFromConfig() {
 	c.SetCommitGapHeight(viper.GetInt64(server.FlagCommitGapHeight))
 	c.SetSentryAddrs(viper.GetString(FlagSentryAddrs))
 	c.SetNodeKeyWhitelist(viper.GetString(FlagNodeKeyWhitelist))
-	c.SetEnableConsensusIPWhitelist(viper.GetBool(FlagEnableConsensusIPWhitelist))
+	c.SetEnableP2PIPWhitelist(viper.GetBool(FlagEnableP2PIPWhitelist))
 	c.SetConsensusIPWhitelist(viper.GetString(FlagConsensusIPWhitelist))
 	c.SetEnableWtx(viper.GetBool(FlagEnableWrappedTx))
 	c.SetEnableAnalyzer(viper.GetBool(trace.FlagEnableAnalyzer))
@@ -518,12 +518,12 @@ func (c *OecConfig) updateFromKVStr(k, v string) {
 		c.SetPendingPoolBlacklist(v)
 	case FlagNodeKeyWhitelist:
 		c.SetNodeKeyWhitelist(v)
-	case FlagEnableConsensusIPWhitelist:
+	case FlagEnableP2PIPWhitelist:
 		r, err := strconv.ParseBool(v)
 		if err != nil {
 			return
 		}
-		c.SetEnableConsensusIPWhitelist(r)
+		c.SetEnableP2PIPWhitelist(r)
 	case FlagConsensusIPWhitelist:
 		c.SetConsensusIPWhitelist(v)
 	case FlagMempoolCheckTxCost:
@@ -825,8 +825,8 @@ func (c *OecConfig) GetNodeKeyWhitelist() []string {
 	return c.nodeKeyWhitelist
 }
 
-func (c *OecConfig) GetEnableConsensusIPWhitelist() bool {
-	return c.enableConsensusIPWhitelist
+func (c *OecConfig) GetEnableP2PIPWhitelist() bool {
+	return c.enableP2PIPWhitelist
 }
 
 func (c *OecConfig) GetConsensusIPWhitelist() map[string]bool {
@@ -854,8 +854,8 @@ func (c *OecConfig) SetNodeKeyWhitelist(value string) {
 	}
 }
 
-func (c *OecConfig) SetEnableConsensusIPWhitelist(value bool) {
-	c.enableConsensusIPWhitelist = value
+func (c *OecConfig) SetEnableP2PIPWhitelist(value bool) {
+	c.enableP2PIPWhitelist = value
 }
 
 func (c *OecConfig) SetConsensusIPWhitelist(value string) {

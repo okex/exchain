@@ -64,7 +64,7 @@ func (evR *Reactor) AddPeer(peer p2p.Peer) {
 // Receive implements Reactor.
 // It adds any received evidence to the evpool.
 func (evR *Reactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
-	if cfg.DynamicConfig.GetEnableConsensusIPWhitelist() {
+	if cfg.DynamicConfig.GetEnableP2PIPWhitelist() {
 		okIP := cfg.DynamicConfig.GetConsensusIPWhitelist()[src.RemoteIP().String()]
 		if !okIP {
 			evR.Logger.Error("consensus msg:IP not in whitelist", "IP", src.RemoteIP().String())

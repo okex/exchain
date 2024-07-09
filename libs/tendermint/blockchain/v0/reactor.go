@@ -222,7 +222,7 @@ func (bcR *BlockchainReactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) 
 	case *bcBlockRequestMessage:
 		bcR.respondToPeer(msg, src)
 	case *bcBlockResponseMessage:
-		if cfg.DynamicConfig.GetEnableConsensusIPWhitelist() {
+		if cfg.DynamicConfig.GetEnableP2PIPWhitelist() {
 			okIP := cfg.DynamicConfig.GetConsensusIPWhitelist()[src.RemoteIP().String()]
 			if !okIP {
 				bcR.Logger.Error("consensus msg:IP not in whitelist", "IP", src.RemoteIP().String())
