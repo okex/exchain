@@ -3,13 +3,13 @@ package v0
 import (
 	"errors"
 	"fmt"
+	cfg "github.com/okex/exchain/libs/tendermint/config"
 	"reflect"
 	"sync"
 	"time"
 
 	amino "github.com/tendermint/go-amino"
 
-	cfg "github.com/okex/exchain/libs/tendermint/config"
 	"github.com/okex/exchain/libs/tendermint/libs/log"
 	"github.com/okex/exchain/libs/tendermint/p2p"
 	sm "github.com/okex/exchain/libs/tendermint/state"
@@ -203,20 +203,6 @@ func (bcR *BlockchainReactor) respondToPeer(msg *bcBlockRequestMessage,
 
 // Receive implements Reactor by handling 4 types of messages (look below).
 func (bcR *BlockchainReactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
-	if cfg.DynamicConfig.GetEnableConsensusIPWhitelist() {
-		okIP := false
-		for _, ip := range cfg.DynamicConfig.GetConsensusIPWhitelist() {
-			if src.RemoteIP().String() == ip {
-				okIP = true
-				break
-			}
-		}
-		if !okIP {
-			bcR.Logger.Error("consensus msg:IP not in whitelist", "IP", src.RemoteIP().String())
-			return
-		}
-	}
-
 	msg, err := decodeMsg(msgBytes)
 	if err != nil {
 		bcR.Logger.Error("Error decoding message", "src", src, "chId", chID, "msg", msg, "err", err, "bytes", msgBytes)
@@ -236,6 +222,13 @@ func (bcR *BlockchainReactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) 
 	case *bcBlockRequestMessage:
 		bcR.respondToPeer(msg, src)
 	case *bcBlockResponseMessage:
+		if cfg.DynamicConfig.GetEnableConsensusIPWhitelist() {
+			okIP := cfg.DynamicConfig.GetConsensusIPWhitelist()[src.RemoteIP().String()]
+			if !okIP {
+				bcR.Logger.Error("consensus msg:IP not in whitelist", "IP", src.RemoteIP().String())
+				return
+			}
+		}
 		bcR.Logger.Info("AddBlock.", "Height", msg.Block.Height, "Peer", src.ID())
 		bcR.pool.AddBlock(src.ID(), msg, len(msgBytes))
 	case *bcStatusRequestMessage:

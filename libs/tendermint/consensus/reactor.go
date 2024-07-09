@@ -344,13 +344,7 @@ func (conR *Reactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
 	}
 
 	if cfg.DynamicConfig.GetEnableConsensusIPWhitelist() {
-		okIP := false
-		for _, ip := range cfg.DynamicConfig.GetConsensusIPWhitelist() {
-			if src.RemoteIP().String() == ip {
-				okIP = true
-				break
-			}
-		}
+		okIP := cfg.DynamicConfig.GetConsensusIPWhitelist()[src.RemoteIP().String()]
 		if !okIP {
 			conR.Logger.Error("consensus msg:IP not in whitelist", "IP", src.RemoteIP().String())
 			return

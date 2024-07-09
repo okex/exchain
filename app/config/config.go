@@ -139,7 +139,7 @@ type OecConfig struct {
 	maxTxLimitPerPeer uint64
 
 	enableConsensusIPWhitelist bool
-	consensusIPWhitelist       []string
+	consensusIPWhitelist       map[string]bool
 }
 
 const (
@@ -829,7 +829,7 @@ func (c *OecConfig) GetEnableConsensusIPWhitelist() bool {
 	return c.enableConsensusIPWhitelist
 }
 
-func (c *OecConfig) GetConsensusIPWhitelist() []string {
+func (c *OecConfig) GetConsensusIPWhitelist() map[string]bool {
 	return c.consensusIPWhitelist
 }
 
@@ -861,7 +861,7 @@ func (c *OecConfig) SetEnableConsensusIPWhitelist(value bool) {
 func (c *OecConfig) SetConsensusIPWhitelist(value string) {
 	ipList := resolveNodeKeyWhitelist(value)
 	for _, ip := range ipList {
-		c.consensusIPWhitelist = append(c.consensusIPWhitelist, strings.TrimSpace(ip))
+		c.consensusIPWhitelist[strings.TrimSpace(ip)] = true
 	}
 }
 
