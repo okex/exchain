@@ -3,13 +3,13 @@ package v0
 import (
 	"errors"
 	"fmt"
-	cfg "github.com/okex/exchain/libs/tendermint/config"
 	"reflect"
 	"sync"
 	"time"
 
 	amino "github.com/tendermint/go-amino"
 
+	cfg "github.com/okex/exchain/libs/tendermint/config"
 	"github.com/okex/exchain/libs/tendermint/libs/log"
 	"github.com/okex/exchain/libs/tendermint/p2p"
 	sm "github.com/okex/exchain/libs/tendermint/state"
