@@ -104,7 +104,7 @@ func makeMultiSignCmd(cdc *codec.Codec) func(cmd *cobra.Command, args []string) 
 			// Validate each signature
 			sigBytes := types.StdSignBytes(
 				txBldr.ChainID(), txBldr.AccountNumber(), txBldr.Sequence(),
-				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(), 0,
+				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
 			)
 			if ok := stdSig.PubKey.VerifyBytes(sigBytes, stdSig.Signature); !ok {
 				return fmt.Errorf("couldn't verify signature")

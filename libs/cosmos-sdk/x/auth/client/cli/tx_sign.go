@@ -232,7 +232,7 @@ func printAndValidateSigs(
 
 			sigBytes := types.StdSignBytes(
 				chainID, acc.GetAccountNumber(), acc.GetSequence(),
-				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(), 0,
+				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
 			)
 
 			if ok := sig.VerifyBytes(sigBytes, sig.Signature); !ok {

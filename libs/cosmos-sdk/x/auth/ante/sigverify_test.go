@@ -431,7 +431,7 @@ func TestVerifySig(t *testing.T) {
 }
 
 func NewSig(ctx sdk.Context, msgs []sdk.Msg, priv crypto.PrivKey, accNum uint64, seq uint64, fee types.StdFee) []types.StdSignature {
-	signBytes := types.StdSignBytes(ctx.ChainID(), accNum, seq, fee, msgs, "", 0)
+	signBytes := types.StdSignBytes(ctx.ChainID(), accNum, seq, fee, msgs, "")
 	sig, err := priv.Sign(signBytes)
 	if err != nil {
 		panic(err)

@@ -256,7 +256,7 @@ func (suite *TxTestSuite) TestRecordTxAndFailedReceipt() {
 func newTestStdTx(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee auth.StdFee, memo string) sdk.Tx {
 	sigs := make([]authtypes.StdSignature, len(privs))
 	for i, priv := range privs {
-		sig, err := priv.Sign(authtypes.StdSignBytes(cosmosChainId, accNums[i], seqs[i], fee, msgs, memo, 0))
+		sig, err := priv.Sign(authtypes.StdSignBytes(cosmosChainId, accNums[i], seqs[i], fee, msgs, memo))
 		if err != nil {
 			panic(err)
 		}
