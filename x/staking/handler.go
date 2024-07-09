@@ -179,6 +179,16 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		if validator.ConsPubKey.Equals(msg.PubKey) {
 			return nil, ErrPubkeyEqual(msg.PubKey.Address().String())
 		}
+		if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.PubKey)); found {
+			return nil, ErrValidatorPubKeyExists()
+		}
+		if ctx.ConsensusParams() != nil {
+			tmPubKey := tmtypes.TM2PB.PubKey(msg.PubKey)
+			if !StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
+				return nil, ErrValidatorPubKeyTypeNotSupported(tmPubKey.Type,
+					ctx.ConsensusParams().Validator.PubKeyTypes)
+			}
+		}
 		k.SetChangePubkey(ctx, validator.OperatorAddress, validator.GetConsPubKey())
 		oldConsAddr := validator.GetConsAddr()
 
