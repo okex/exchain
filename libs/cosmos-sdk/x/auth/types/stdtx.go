@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
+	
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/okex/exchain/libs/cosmos-sdk/codec"
@@ -14,7 +16,6 @@ import (
 	"github.com/okex/exchain/libs/tendermint/crypto/multisig"
 	"github.com/tendermint/go-amino"
 	yaml "gopkg.in/yaml.v2"
-	"math/big"
 )
 
 var (
