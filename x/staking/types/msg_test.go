@@ -119,7 +119,7 @@ func TestMsgEditValidator(t *testing.T) {
 
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg := NewMsgEditValidator(tc.validatorAddr, description, nil)
+		msg := NewMsgEditValidator(tc.validatorAddr, description)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 			checkMsg(t, msg, "edit_validator")

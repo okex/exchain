@@ -106,16 +106,6 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				Details:  viper.GetString(FlagDetails),
 			}
 
-			pkStr := viper.GetString(FlagPubKey)
-			var pk crypto.PubKey = nil
-			var err error
-			if pkStr != "" {
-				pk, err = types.GetConsPubKeyBech32(pkStr)
-				if err != nil {
-					return err
-				}
-			}
-
 			// TODO: recover the msd modification later
 			//var newMinSelfDelegation *sdk.Int
 			//
@@ -132,7 +122,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 			//}
 			//
 			//msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfDelegation)
-			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description, pk)
+			msg := types.NewMsgEditValidator(sdk.ValAddress(valAddr), description)
 
 			// build and sign the transaction, then broadcast to Tendermint
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
@@ -140,7 +130,6 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(fsDescriptionEdit)
-	cmd.Flags().String(FlagPubKey, "", "The Bech32 encoded PubKey of the validator")
 	//cmd.Flags().AddFlagSet(fsCommissionUpdate)
 
 	return cmd

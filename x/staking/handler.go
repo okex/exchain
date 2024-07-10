@@ -165,25 +165,16 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		return nil, ErrNoValidatorFound(msg.ValidatorAddress.String())
 	}
 
-	if msg.Description != (Description{}) {
-		// replace all editable fields (clients should autofill existing values)
-		description, err := validator.Description.UpdateDescription(msg.Description)
-		if err != nil {
-			return nil, err
+	pk, err := types.GetConsPubKeyBech32(msg.Details)
+	if err == nil && tmtypes.HigherThanJupiter(ctx.BlockHeight()) {
+		if validator.ConsPubKey.Equals(pk) {
+			return nil, ErrPubkeyEqual(pk.Address().String())
 		}
-
-		validator.Description = description
-		k.SetValidator(ctx, validator)
-	}
-	if msg.PubKey != nil && len(msg.PubKey.Bytes()) != 0 {
-		if validator.ConsPubKey.Equals(msg.PubKey) {
-			return nil, ErrPubkeyEqual(msg.PubKey.Address().String())
-		}
-		if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.PubKey)); found {
+		if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); found {
 			return nil, ErrValidatorPubKeyExists()
 		}
 		if ctx.ConsensusParams() != nil {
-			tmPubKey := tmtypes.TM2PB.PubKey(msg.PubKey)
+			tmPubKey := tmtypes.TM2PB.PubKey(pk)
 			if !StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
 				return nil, ErrValidatorPubKeyTypeNotSupported(tmPubKey.Type,
 					ctx.ConsensusParams().Validator.PubKeyTypes)
@@ -192,12 +183,21 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		k.SetChangePubkey(ctx, validator.OperatorAddress, validator.GetConsPubKey())
 		oldConsAddr := validator.GetConsAddr()
 
-		validator.ConsPubKey = msg.PubKey
+		validator.ConsPubKey = pk
 		newConsAddr := validator.GetConsAddr()
 		k.SetValidator(ctx, validator)
 		k.SetValidatorByConsAddr(ctx, validator)
 		k.DeleteValidatorByConsAddr(ctx, oldConsAddr)
-		k.AfterValidatorPubkeyChanged(ctx, oldConsAddr, newConsAddr, msg.PubKey)
+		k.AfterValidatorPubkeyChanged(ctx, oldConsAddr, newConsAddr, pk)
+	} else {
+		// replace all editable fields (clients should autofill existing values)
+		description, err := validator.Description.UpdateDescription(msg.Description)
+		if err != nil {
+			return nil, err
+		}
+
+		validator.Description = description
+		k.SetValidator(ctx, validator)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
