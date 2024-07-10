@@ -249,7 +249,6 @@ func GetChainMaxGasUsedPerBlock() int64 {
 func GetOecConfig() *OecConfig {
 	once.Do(func() {
 		oecConfig = NewOecConfig()
-		oecConfig.consensusIPWhitelist = map[string]bool{}
 	})
 	return oecConfig
 }
@@ -286,6 +285,7 @@ func defaultOecConfig() *OecConfig {
 		mempoolForceRecheckGap: 2000,
 		commitGapHeight:        iavlconfig.DefaultCommitGapHeight,
 		iavlFSCacheSize:        tmiavl.DefaultIavlFastStorageCacheSize,
+		consensusIPWhitelist:   map[string]bool{},
 	}
 }
 
