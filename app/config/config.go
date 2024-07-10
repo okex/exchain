@@ -860,6 +860,7 @@ func (c *OecConfig) SetEnableP2PIPWhitelist(value bool) {
 }
 
 func (c *OecConfig) SetConsensusIPWhitelist(value string) {
+	c.consensusIPWhitelist = map[string]bool{}
 	ipList := resolveNodeKeyWhitelist(value)
 	for _, ip := range ipList {
 		c.consensusIPWhitelist[strings.TrimSpace(ip)] = true
