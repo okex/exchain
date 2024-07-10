@@ -2,8 +2,8 @@ package ante_test
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/spf13/viper"
 	"testing"
 
 	"github.com/okex/exchain/libs/tendermint/crypto"
