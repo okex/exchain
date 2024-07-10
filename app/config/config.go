@@ -249,6 +249,7 @@ func GetChainMaxGasUsedPerBlock() int64 {
 func GetOecConfig() *OecConfig {
 	once.Do(func() {
 		oecConfig = NewOecConfig()
+		oecConfig.consensusIPWhitelist = map[string]bool{}
 	})
 	return oecConfig
 }
