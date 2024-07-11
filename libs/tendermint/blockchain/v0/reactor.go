@@ -3,6 +3,7 @@ package v0
 import (
 	"errors"
 	"fmt"
+	cfg "github.com/okex/exchain/libs/tendermint/config"
 	"reflect"
 	"sync"
 	"time"
@@ -221,6 +222,13 @@ func (bcR *BlockchainReactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) 
 	case *bcBlockRequestMessage:
 		bcR.respondToPeer(msg, src)
 	case *bcBlockResponseMessage:
+		if cfg.DynamicConfig.GetEnableP2PIPWhitelist() {
+			okIP := cfg.DynamicConfig.GetConsensusIPWhitelist()[src.RemoteIP().String()]
+			if !okIP {
+				bcR.Logger.Error("consensus msg:IP not in whitelist", "IP", src.RemoteIP().String())
+				return
+			}
+		}
 		bcR.Logger.Info("AddBlock.", "Height", msg.Block.Height, "Peer", src.ID())
 		bcR.pool.AddBlock(src.ID(), msg, len(msgBytes))
 	case *bcStatusRequestMessage:
