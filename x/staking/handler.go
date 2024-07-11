@@ -166,7 +166,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	}
 
 	pk, err := types.GetConsPubKeyBech32(msg.Details)
-	if err == nil && tmtypes.HigherThanJupiter(ctx.BlockHeight()) {
+	if err == nil && tmtypes.HigherThanVenus8(ctx.BlockHeight()) {
 		if validator.ConsPubKey.Equals(pk) {
 			return nil, ErrPubkeyEqual(pk.Address().String())
 		}

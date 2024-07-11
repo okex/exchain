@@ -48,8 +48,8 @@ var (
 	MILESTONE_VENUS7_NAME       = "venus7"
 	milestoneVenus7Height int64 = 0
 
-	MILESTONE_JUPITER_NAME string
-	milestoneJupiterHeight int64
+	MILESTONE_VENUS8_NAME       = "venus8"
+	milestoneVenus8Height int64 = 0
 
 	// note: it stores the earlies height of the node,and it is used by cli
 	nodePruneHeight int64
@@ -91,7 +91,6 @@ func init() {
 		milestoneEarthHeight = string2number(MILESTONE_EARTH_HEIGHT)
 		milestoneVenus4Height = string2number(MILESTONE_VENUS4_HEIGHT)
 		milestoneVenus5Height = string2number(MILESTONE_VENUS5_HEIGHT)
-		milestoneJupiterHeight = string2number(MILESTONE_JUPITER_NAME)
 	})
 }
 
@@ -144,18 +143,6 @@ func HigherThanMars(height int64) bool {
 		return false
 	}
 	return height > milestoneMarsHeight
-}
-
-// change val's pubkey
-func HigherThanJupiter(height int64) bool {
-	if milestoneJupiterHeight == 0 {
-		return false
-	}
-	return height > milestoneJupiterHeight
-}
-
-func GetJupiterHeight() int64 {
-	return milestoneJupiterHeight
 }
 
 // GetMilestoneVenusHeight returns milestoneVenusHeight
@@ -370,3 +357,15 @@ func GetVenus7Height() int64 {
 
 // =========== Venus7 ===============
 // ==================================
+
+// change val's pubkey
+func HigherThanVenus8(h int64) bool {
+	if milestoneVenus8Height == 0 {
+		return false
+	}
+	return h > milestoneVenus8Height
+}
+
+func InitMilestoneVenus8Height(h int64) {
+	milestoneVenus8Height = h
+}
