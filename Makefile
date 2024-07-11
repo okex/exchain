@@ -123,7 +123,6 @@ ldflags = -X $(GithubTop)/okex/exchain/libs/cosmos-sdk/version.Version=$(Version
   -X $(GithubTop)/okex/exchain/libs/tendermint/types.MILESTONE_MARS_HEIGHT=$(MarsHeight)
 
 
-
 ifeq ($(WITH_ROCKSDB),true)
   ldflags += -X github.com/okex/exchain/libs/tendermint/types.DBBackend=rocksdb
 endif

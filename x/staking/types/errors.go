@@ -59,8 +59,7 @@ const (
 	CodeTargetValsDuplicate             uint32 = 67045
 	CodeAlreadyBound                    uint32 = 67046
 
-	CodePubkeyEqual                 uint32 = 67047
-	CodeDescriptionAndPubkeyIsEmpty uint32 = 67048
+	CodePubkeyEqual uint32 = 67047
 )
 
 var (
@@ -75,10 +74,6 @@ func ErrNoValidatorFound(valAddr string) sdk.EnvelopedErr {
 
 func ErrPubkeyEqual(pubkey string) sdk.EnvelopedErr {
 	return sdk.EnvelopedErr{Err: sdkerrors.New(DefaultCodespace, CodePubkeyEqual, fmt.Sprintf("validator pubkey %s does exist", pubkey))}
-}
-
-func ErrDescriptionAndPubkeyIsEmpty() sdk.Error {
-	return sdkerrors.New(DefaultCodespace, CodeDescriptionAndPubkeyIsEmpty, "empty description and pubkey")
 }
 
 // ErrInvalidDelegation returns an error when the delegation is invalid

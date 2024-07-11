@@ -3,11 +3,11 @@ package keeper
 import (
 	"bytes"
 	"fmt"
-	"github.com/okex/exchain/libs/tendermint/crypto"
-	cryptoAmino "github.com/okex/exchain/libs/tendermint/crypto/encoding/amino"
 	"time"
 
 	sdk "github.com/okex/exchain/libs/cosmos-sdk/types"
+	"github.com/okex/exchain/libs/tendermint/crypto"
+	cryptoAmino "github.com/okex/exchain/libs/tendermint/crypto/encoding/amino"
 	"github.com/okex/exchain/x/staking/types"
 )
 
