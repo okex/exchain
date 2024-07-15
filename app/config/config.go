@@ -126,6 +126,9 @@ type OecConfig struct {
 	maxSubscriptionClients int
 
 	maxTxLimitPerPeer uint64
+
+	enableP2PIPWhitelist bool
+	consensusIPWhitelist map[string]bool
 }
 
 const (
@@ -153,6 +156,8 @@ const (
 	FlagDynamicGpMaxTxNum          = "dynamic-gp-max-tx-num"
 	FlagEnableWrappedTx            = "enable-wtx"
 	FlagSentryAddrs                = "p2p.sentry_addrs"
+	FlagEnableP2PIPWhitelist       = "p2p.enable_ip_whitelist"
+	FlagConsensusIPWhitelist       = "p2p.consensus_ip_whitelist"
 	FlagCsTimeoutPropose           = "consensus.timeout_propose"
 	FlagCsTimeoutProposeDelta      = "consensus.timeout_propose_delta"
 	FlagCsTimeoutPrevote           = "consensus.timeout_prevote"
@@ -260,6 +265,7 @@ func defaultOecConfig() *OecConfig {
 		mempoolForceRecheckGap: 2000,
 		commitGapHeight:        iavlconfig.DefaultCommitGapHeight,
 		iavlFSCacheSize:        tmiavl.DefaultIavlFastStorageCacheSize,
+		consensusIPWhitelist:   map[string]bool{},
 	}
 }
 
@@ -316,6 +322,9 @@ func (c *OecConfig) loadFromConfig() {
 	c.SetGcInterval(viper.GetInt(FlagDebugGcInterval))
 	c.SetIavlAcNoBatch(viper.GetBool(tmiavl.FlagIavlCommitAsyncNoBatch))
 	c.SetMaxSubscriptionClients(viper.GetInt(FlagMaxSubscriptionClients))
+
+	c.SetEnableP2PIPWhitelist(viper.GetBool(FlagEnableP2PIPWhitelist))
+	c.SetConsensusIPWhitelist(viper.GetString(FlagConsensusIPWhitelist))
 }
 
 func resolveNodeKeyWhitelist(plain string) []string {
@@ -680,6 +689,14 @@ func (c *OecConfig) updateFromKVStr(k, v string) {
 			return
 		}
 		c.SetMaxSubscriptionClients(r)
+	case FlagEnableP2PIPWhitelist:
+		r, err := strconv.ParseBool(v)
+		if err != nil {
+			return
+		}
+		c.SetEnableP2PIPWhitelist(r)
+	case FlagConsensusIPWhitelist:
+		c.SetConsensusIPWhitelist(v)
 	}
 
 }
@@ -1118,4 +1135,24 @@ func (c *OecConfig) SetMaxTxLimitPerPeer(maxTxLimitPerPeer int64) {
 
 func (c *OecConfig) GetMaxTxLimitPerPeer() uint64 {
 	return c.maxTxLimitPerPeer
+}
+
+func (c *OecConfig) GetEnableP2PIPWhitelist() bool {
+	return c.enableP2PIPWhitelist
+}
+
+func (c *OecConfig) GetConsensusIPWhitelist() map[string]bool {
+	return c.consensusIPWhitelist
+}
+
+func (c *OecConfig) SetEnableP2PIPWhitelist(value bool) {
+	c.enableP2PIPWhitelist = value
+}
+
+func (c *OecConfig) SetConsensusIPWhitelist(value string) {
+	c.consensusIPWhitelist = map[string]bool{}
+	ipList := resolveNodeKeyWhitelist(value)
+	for _, ip := range ipList {
+		c.consensusIPWhitelist[strings.TrimSpace(ip)] = true
+	}
 }
