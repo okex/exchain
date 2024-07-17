@@ -3,17 +3,17 @@ package consensus
 import (
 	"bytes"
 	"fmt"
-	"github.com/okex/exchain/libs/tendermint/crypto"
-	"github.com/okex/exchain/libs/tendermint/libs/automation"
 	"reflect"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
-
 	amino "github.com/tendermint/go-amino"
 
+	cfg "github.com/okex/exchain/libs/tendermint/config"
 	cstypes "github.com/okex/exchain/libs/tendermint/consensus/types"
+	"github.com/okex/exchain/libs/tendermint/crypto"
+	"github.com/okex/exchain/libs/tendermint/libs/automation"
 	"github.com/okex/exchain/libs/tendermint/libs/bits"
 	tmevents "github.com/okex/exchain/libs/tendermint/libs/events"
 	"github.com/okex/exchain/libs/tendermint/libs/log"
@@ -341,6 +341,14 @@ func (conR *Reactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) {
 	if !conR.IsRunning() {
 		conR.Logger.Debug("Receive", "src", src, "chId", chID, "bytes", msgBytes)
 		return
+	}
+
+	if cfg.DynamicConfig.GetEnableP2PIPWhitelist() {
+		okIP := cfg.DynamicConfig.GetConsensusIPWhitelist()[src.RemoteIP().String()]
+		if !okIP {
+			conR.Logger.Error("consensus msg:IP not in whitelist", "IP", src.RemoteIP().String())
+			return
+		}
 	}
 
 	msg, err := decodeMsg(msgBytes)
