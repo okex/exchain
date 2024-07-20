@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -270,6 +271,13 @@ func (st *Store) DeleteVersions(versions ...int64) error {
 
 // Implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
+	defer func() {
+		if r := recover(); r != nil {
+			debug.PrintStack()
+			panic(fmt.Errorf("=============panic: %v", r))
+		}
+	}()
+
 	var iTree *iavl.ImmutableTree
 
 	switch tree := st.tree.(type) {
@@ -284,6 +292,12 @@ func (st *Store) Iterator(start, end []byte) types.Iterator {
 
 // Implements types.KVStore.
 func (st *Store) ReverseIterator(start, end []byte) types.Iterator {
+	defer func() {
+		if r := recover(); r != nil {
+			debug.PrintStack()
+			panic(fmt.Errorf("--------------panic: %v", r))
+		}
+	}()
 	var iTree *iavl.ImmutableTree
 
 	switch tree := st.tree.(type) {

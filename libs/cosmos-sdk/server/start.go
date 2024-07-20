@@ -222,6 +222,21 @@ func startInProcess(ctx *Context, cdc *codec.CodecProxy, registry jsonpb.AnyReso
 		}
 	}
 
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.Logger.Error("startInProcess panic", "err", r)
+			if tmNode.IsRunning() {
+				_ = tmNode.Stop()
+			}
+			appStop(app)
+
+			if cpuProfileCleanup != nil {
+				cpuProfileCleanup()
+			}
+			ctx.Logger.Error("exiting...")
+		}
+	}()
+
 	TrapSignal(func() {
 		if tmNode.IsRunning() {
 			_ = tmNode.Stop()
