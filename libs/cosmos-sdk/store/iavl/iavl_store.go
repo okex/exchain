@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"runtime/debug"
 	"sync"
 	"time"
 
@@ -271,13 +270,6 @@ func (st *Store) DeleteVersions(versions ...int64) error {
 
 // Implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
-	defer func() {
-		if r := recover(); r != nil {
-			debug.PrintStack()
-			panic(fmt.Errorf("=============panic: %v", r))
-		}
-	}()
-
 	var iTree *iavl.ImmutableTree
 
 	switch tree := st.tree.(type) {
@@ -292,12 +284,6 @@ func (st *Store) Iterator(start, end []byte) types.Iterator {
 
 // Implements types.KVStore.
 func (st *Store) ReverseIterator(start, end []byte) types.Iterator {
-	defer func() {
-		if r := recover(); r != nil {
-			debug.PrintStack()
-			panic(fmt.Errorf("--------------panic: %v", r))
-		}
-	}()
 	var iTree *iavl.ImmutableTree
 
 	switch tree := st.tree.(type) {
@@ -480,6 +466,11 @@ func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool
 
 // Run this to funnel items from the tree to iterCh.
 func (iter *iavlIterator) iterateRoutine() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("%s, %v", time.Now(), r)
+		}
+	}()
 	iter.tree.IterateRange(
 		iter.start, iter.end, iter.ascending,
 		func(key, value []byte) bool {
