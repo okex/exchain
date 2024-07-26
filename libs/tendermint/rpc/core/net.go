@@ -20,11 +20,13 @@ func NetInfo(ctx *rpctypes.Context) (*ctypes.ResultNetInfo, error) {
 		if !ok {
 			return nil, fmt.Errorf("peer.NodeInfo() is not DefaultNodeInfo")
 		}
+		nodeInfo.ListenAddr = ""
+		nodeInfo.Other.RPCAddress = ""
 		peers = append(peers, ctypes.Peer{
 			NodeInfo:         nodeInfo,
 			IsOutbound:       peer.IsOutbound(),
 			ConnectionStatus: peer.Status(),
-			RemoteIP:         peer.RemoteIP().String(),
+			RemoteIP:         "",
 		})
 	}
 	// TODO: Should we include PersistentPeers and Seeds in here?
@@ -32,7 +34,7 @@ func NetInfo(ctx *rpctypes.Context) (*ctypes.ResultNetInfo, error) {
 	// CON: privacy
 	return &ctypes.ResultNetInfo{
 		Listening: env.P2PTransport.IsListening(),
-		Listeners: env.P2PTransport.Listeners(),
+		Listeners: []string{""},
 		NPeers:    len(peers),
 		Peers:     peers,
 	}, nil
