@@ -42,6 +42,9 @@ var (
 	MILESTONE_VENUS5_HEIGHT string
 	milestoneVenus5Height   int64
 
+	MILESTONE_VENUS8_NAME       = "venus8"
+	milestoneVenus8Height int64 = 0
+
 	// note: it stores the earlies height of the node,and it is used by cli
 	nodePruneHeight int64
 
@@ -112,7 +115,7 @@ func SetupTestNetEnvironment(pruneH int64) {
 	milestoneVenus1Height = TestNetVeneus1Height
 }
 
-//depracate homstead signer support
+// depracate homstead signer support
 func HigherThanMercury(height int64) bool {
 	if milestoneMercuryHeight == 0 {
 		// milestoneMercuryHeight not enabled
@@ -128,7 +131,7 @@ func HigherThanVenus(height int64) bool {
 	return height >= milestoneVenusHeight
 }
 
-//use MPT storage model to replace IAVL storage model
+// use MPT storage model to replace IAVL storage model
 func HigherThanMars(height int64) bool {
 	if milestoneMarsHeight == 0 {
 		return false
@@ -304,3 +307,15 @@ func GetVenus5Height() int64 {
 
 // =========== Venus4 ===============
 // ==================================
+
+// change val's pubkey
+func HigherThanVenus8(h int64) bool {
+	if milestoneVenus8Height == 0 {
+		return false
+	}
+	return h > milestoneVenus8Height
+}
+
+func InitMilestoneVenus8Height(h int64) {
+	milestoneVenus8Height = h
+}

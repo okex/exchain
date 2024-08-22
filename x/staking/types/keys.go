@@ -30,7 +30,7 @@ const (
 	RouterKey = ModuleName
 )
 
-//nolint
+// nolint
 var (
 	// Keys for store prefixes
 	// Last* values are constant during a block.
@@ -40,6 +40,7 @@ var (
 	ValidatorsKey             = []byte{0x21} // prefix for each key to a validator
 	ValidatorsByConsAddrKey   = []byte{0x22} // prefix for each key to a validator index, by pubkey
 	ValidatorsByPowerIndexKey = []byte{0x23} // prefix for each key to a validator index, sorted by power
+	ValChangePubkeyKey        = []byte{0x24}
 
 	ValidatorQueueKey = []byte{0x43} // prefix for the timestamps in validator queue
 
@@ -65,6 +66,10 @@ func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
 // VALUE: validator operator address ([]byte)
 func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
 	return append(ValidatorsByConsAddrKey, addr.Bytes()...)
+}
+
+func GetValidatorChangePubkeyKey(operatorAddr sdk.ValAddress) []byte {
+	return append(ValChangePubkeyKey, operatorAddr.Bytes()...)
 }
 
 // AddressFromLastValidatorPowerKey gets the validator operator address from LastValidatorPowerKey

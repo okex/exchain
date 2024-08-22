@@ -6,6 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/okex/exchain/libs/cosmos-sdk/types"
+	"github.com/okex/exchain/libs/tendermint/crypto"
+	cryptoAmino "github.com/okex/exchain/libs/tendermint/crypto/encoding/amino"
 	"github.com/okex/exchain/x/staking/types"
 )
 
@@ -54,11 +56,39 @@ func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store.Set(types.GetValidatorKey(validator.OperatorAddress), bz)
 }
 
+func (k Keeper) SetChangePubkey(ctx sdk.Context, addr sdk.ValAddress, pubkey crypto.PubKey) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetValidatorChangePubkeyKey(addr), pubkey.Bytes())
+}
+
+func (k Keeper) DeleteChangePubkey(ctx sdk.Context, addr sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetValidatorChangePubkeyKey(addr))
+}
+
+func (k Keeper) GetChangePubkey(ctx sdk.Context, addr sdk.ValAddress) (pubkey crypto.PubKey, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	value := store.Get(types.GetValidatorChangePubkeyKey(addr))
+	if value == nil {
+		return nil, false
+	}
+	pk, err := cryptoAmino.PubKeyFromBytes(value)
+	if err != nil {
+		panic(err)
+	}
+	return pk, true
+}
+
 // SetValidatorByConsAddr sets the operator address with the key of validator consensus pubkey
 func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	consAddr := sdk.ConsAddress(validator.ConsPubKey.Address())
 	store.Set(types.GetValidatorByConsAddrKey(consAddr), validator.OperatorAddress)
+}
+
+func (k Keeper) DeleteValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetValidatorByConsAddrKey(consAddr))
 }
 
 // SetValidatorByPowerIndex sets the power index key of an unjailed validator
