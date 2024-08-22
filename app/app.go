@@ -12,9 +12,9 @@ import (
 	icacontroller "github.com/okex/exchain/libs/ibc-go/modules/apps/27-interchain-accounts/controller"
 	icahost "github.com/okex/exchain/libs/ibc-go/modules/apps/27-interchain-accounts/host"
 	"github.com/okex/exchain/libs/ibc-go/modules/apps/common"
-	"github.com/okex/exchain/x/icamauth"
-
 	ibccommon "github.com/okex/exchain/libs/ibc-go/modules/core/common"
+	"github.com/okex/exchain/x/icamauth"
+	paramstypes "github.com/okex/exchain/x/params/types"
 
 	icacontrollertypes "github.com/okex/exchain/libs/ibc-go/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/okex/exchain/libs/ibc-go/modules/apps/27-interchain-accounts/host/types"
@@ -773,10 +773,7 @@ func NewOKExChainApp(
 			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
 		}
 
-		if err := app.ParamsKeeper.ApplyEffectiveUpgrade(ctx); err != nil {
-			tmos.Exit(fmt.Sprintf("failed apply effective upgrade height info: %s", err))
-		}
-
+		app.InitUpgrade(ctx)
 		app.WasmKeeper.UpdateGasRegister(ctx)
 	}
 
@@ -791,6 +788,17 @@ func NewOKExChainApp(
 	trace.EnableAnalyzer(enableAnalyzer)
 
 	return app
+}
+
+func (app *OKExChainApp) InitUpgrade(ctx sdk.Context) {
+	// Claim before ApplyEffectiveUpgrade
+	app.ParamsKeeper.ClaimReadyForUpgrade(tmtypes.MILESTONE_VENUS8_NAME, func(info paramstypes.UpgradeInfo) {
+		tmtypes.InitMilestoneVenus8Height(int64(info.EffectiveHeight))
+	})
+
+	if err := app.ParamsKeeper.ApplyEffectiveUpgrade(ctx); err != nil {
+		tmos.Exit(fmt.Sprintf("failed apply effective upgrade height info: %s", err))
+	}
 }
 
 func (app *OKExChainApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {

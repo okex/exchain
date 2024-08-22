@@ -17,7 +17,8 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	// fetch the validator public key
 	consAddr := sdk.ConsAddress(addr)
 	if _, err := k.GetPubkey(ctx, addr); err != nil {
-		panic(fmt.Sprintf("Validator consensus-address %s not found", consAddr))
+		// ignore this panic, now we can change the validator's pub key
+		//panic(fmt.Sprintf("Validator consensus-address %s not found", consAddr))
 	}
 
 	// fetch signing info

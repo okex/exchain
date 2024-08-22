@@ -315,8 +315,10 @@ func SimpleCheckValidator(t *testing.T, ctx sdk.Context, stkKeeper Keeper, vaAdd
 // mockDistributionKeeper is supported to test Hooks
 type mockDistributionKeeper struct{}
 
-func (dk mockDistributionKeeper) Hooks() types.StakingHooks                                       { return dk }
-func (dk mockDistributionKeeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress)   {}
+func (dk mockDistributionKeeper) Hooks() types.StakingHooks                                     { return dk }
+func (dk mockDistributionKeeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {}
+func (dk mockDistributionKeeper) AfterValidatorPubkeyChanged(ctx sdk.Context, oldAddress sdk.ConsAddress, newAddress sdk.ConsAddress, newPubkey crypto.PubKey) {
+}
 func (dk mockDistributionKeeper) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {}
 func (dk mockDistributionKeeper) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 }

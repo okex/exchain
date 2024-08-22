@@ -31,6 +31,7 @@ var (
 	RegisterCodec                      = types.RegisterCodec
 	NewCommission                      = types.NewCommission
 	ErrNoValidatorFound                = types.ErrNoValidatorFound
+	ErrPubkeyEqual                     = types.ErrPubkeyEqual
 	ErrValidatorOwnerExists            = types.ErrValidatorOwnerExists
 	ErrValidatorPubKeyExists           = types.ErrValidatorPubKeyExists
 	ErrValidatorPubKeyTypeNotSupported = types.ErrValidatorPubKeyTypeNotSupported

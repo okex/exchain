@@ -76,6 +76,16 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			k.SetLastValidatorPower(ctx, valAddr, newPower)
 		}
 
+		// change val node key
+		if pk, found := k.GetChangePubkey(ctx, validator.OperatorAddress); found {
+			oldVal := types.Validator{ConsPubKey: pk}
+			// delete old pubkey
+			updates = append(updates, oldVal.ABCIValidatorUpdateZero())
+			// add new pubkey
+			updates = append(updates, validator.ABCIValidatorUpdateByShares())
+			k.DeleteChangePubkey(ctx, validator.OperatorAddress)
+		}
+
 		// validator still in the validator set, so delete from the copy
 		delete(last, valAddrBytes)
 

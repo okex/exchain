@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/okex/exchain/libs/cosmos-sdk/types"
+	"github.com/okex/exchain/libs/tendermint/crypto"
 
 	"github.com/okex/exchain/x/distribution/types"
 	stakingtypes "github.com/okex/exchain/x/staking/types"
@@ -21,6 +22,9 @@ func (k Keeper) Hooks() Hooks { return Hooks{k} }
 func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)
 	h.k.initializeValidator(ctx, val)
+}
+
+func (h Hooks) AfterValidatorPubkeyChanged(ctx sdk.Context, oldAddress sdk.ConsAddress, newAddress sdk.ConsAddress, newPubkey crypto.PubKey) {
 }
 
 // AfterValidatorRemoved cleans up for after validator is removed

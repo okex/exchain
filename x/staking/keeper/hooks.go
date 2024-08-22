@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/okex/exchain/libs/cosmos-sdk/types"
+	"github.com/okex/exchain/libs/tendermint/crypto"
 	"github.com/okex/exchain/x/staking/types"
 )
 
@@ -12,6 +13,12 @@ var _ types.StakingHooks = Keeper{}
 func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
 		k.hooks.AfterValidatorCreated(ctx, valAddr)
+	}
+}
+
+func (k Keeper) AfterValidatorPubkeyChanged(ctx sdk.Context, oldAddress sdk.ConsAddress, newAddress sdk.ConsAddress, newPubkey crypto.PubKey) {
+	if k.hooks != nil {
+		k.hooks.AfterValidatorPubkeyChanged(ctx, oldAddress, newAddress, newPubkey)
 	}
 }
 
