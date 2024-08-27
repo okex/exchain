@@ -1,0 +1,161 @@
+name: image-builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        required: false
+      tag:
+        description: 'Tag to build'
+        required: false
+      type:
+        description: 'Image type to build, eg: val, explorer'
+        required: false
+        default: 'explorer'
+        type: choice
+        options:
+          - rpc
+          - cli
+          - public_full
+          - val
+          - explorer
+      network:
+        description: 'Network type, eg: mainnet, testnet'
+        required: false
+        default: 'mainnet'
+        type: choice
+        options:
+          - mainnet
+          - testnet
+      base_env:
+        description: 'Base environment, eg: mainnet-> go1.20.1-static-v102-8d2c621, testnet -> go1.20.1-static-v136-ec580bc'
+        required: false
+        default: 'go1.20.1-static-v102-8d2c621'
+      innertx:
+        description: 'go-ethereum innertx version, eg: v1.10.8'
+        required: false
+        default: 'innerTx-1.10.08'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.event.inputs.tag }}
+          token: ${{ secrets.TOKEN }}
+
+      - name: Script and Generate Dockerfile
+        run: |
+          git config --global url.https://${{ secrets.TOKEN }}@github.com/.insteadOf https://github.com/
+          git config --global user.email "github_action@example.com"
+          git config --global user.name "Github Action"
+          long_commit_id=$(git rev-parse HEAD)
+          branch=${{ github.event.inputs.branch }}
+          tag=${{ github.event.inputs.tag }}
+          if [ -z "$branch" ] && [ -z "$tag" ]; then
+            echo "Both branch and tag are empty."
+            exit 1
+          elif [ -n "$branch" ] && [ -n "$tag" ]; then
+            echo "Both branch and tag are provided. Please provide only one."
+            exit 1
+          else
+            echo "Correct! One of branch or tag is provided."
+          fi
+          type=${{ github.event.inputs.type }}
+          network=${{ github.event.inputs.network }}
+          base_env=""
+          if [ "$network" = "mainnet" ]; then
+            base_env="go1.20.1-static-v102-8d2c621"
+          elif [ "$network" = "testnet" ]; then
+            base_env="go1.20.1-static-v136-ec580bc"
+          fi
+          innertx=${{ github.event.inputs.innertx }}
+
+          echo "========== params:==========="
+          echo "type: $type"
+          echo "network: $network"
+          echo "base_env: $base_env"
+          echo "innertx: $innertx"
+          echo "long_commit_id: $long_commit_id"
+          echo "========== params end==========="
+
+          if [ "$type" = "val" ]; then
+            git clone https://github.com/okx/okexchain-patches.git
+            cd ./okexchain-patches
+            git checkout main
+            cd ..
+            git rev-parse HEAD
+            git am ./okexchain-patches/priorQueue/*.patch
+            echo '打prior_tx后ID:'$(git rev-parse HEAD)
+            rm -rf ./okexchain-patches
+          elif [ "$type" = "explorer" ]; then
+            git clone https://github.com/okx/okexchain-patches.git
+            cd ./okexchain-patches
+            git checkout fcb6da71610a6c20a9e13bffcbc3623b86c4c09e
+            git rev-parse HEAD
+            cd ..
+            git clone https://github.com/okx/go-ethereum-innertx.git go-ethereum
+            cd ./go-ethereum
+            git checkout "$innertx"
+            git rev-parse HEAD
+            cd ..
+            git am ./okexchain-patches/innerTx/*.patch
+            echo '打补丁浏览器补丁后ID:'$(git rev-parse HEAD)
+            go mod edit -replace github.com/ethereum/go-ethereum=./go-ethereum
+            rm -rf ./okexchain-patches
+          fi
+          git reset --soft $long_commit_id
+
+          copy_command="COPY . ./exchain"
+          make_command="RUN cd exchain && make $network WITH_ROCKSDB=true LINK_STATICALLY=true"
+          if [ "$type" = "explorer" ]; then
+            copy_command="COPY . ./exchain
+          COPY go-ethereum ./go-ethereum"
+            make_command="RUN cd exchain && go mod tidy && make $network WITH_ROCKSDB=true LINK_STATICALLY=true"
+          fi
+          echo "FROM okexchain/build-env:$base_env as builder
+          WORKDIR \$GOPATH/src/github.com/okx
+          ENV GO111MODULE=on GOPROXY=direct
+
+          $copy_command
+
+          $make_command
+
+          FROM okexchain/build-env:$base_env
+          COPY --from=builder \$GOPATH/bin/exchaind \$GOPATH/bin/exchaind
+          COPY --from=builder \$GOPATH/bin/exchaincli \$GOPATH/bin/exchaincli
+          RUN apk add --no-cache axel
+          ENTRYPOINT [\"/bin/bash\", \"-c\"]
+          CMD [\"exchaind start\"]
+          EXPOSE 26656 26657 26659 26660 6060" > Dockerfile
+          echo "生成的Dockerfile内容如下:"
+          cat Dockerfile
+
+      - name: Get current date
+        id: date
+        run: echo "DATE=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+
+      - name: Get commit hash
+        id: commit
+        run: echo "HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Generate image tag
+        id: tag
+        run: |
+          BRANCH_TAG=$(echo "${{ github.event.inputs.branch || github.event.inputs.tag }}" | sed 's/\//_/g')
+          IMAGE_TAG="${BRANCH_TAG}_${DATE}_${HASH}"
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker image
+        run: |
+          docker build -t "okexchain/${{ github.event.inputs.network }}-${{ github.event.inputs.type }}:${{ env.IMAGE_TAG }}" .
+          docker push "okexchain/${{ github.event.inputs.network }}-${{ github.event.inputs.type }}:${{ env.IMAGE_TAG }}"
