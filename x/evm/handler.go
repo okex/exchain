@@ -1,6 +1,7 @@
 package evm
 
 import (
+	"fmt"
 	bam "github.com/okex/exchain/libs/cosmos-sdk/baseapp"
 	sdk "github.com/okex/exchain/libs/cosmos-sdk/types"
 	sdkerrors "github.com/okex/exchain/libs/cosmos-sdk/types/errors"
@@ -42,7 +43,7 @@ func updateHGU(ctx sdk.Context, msg sdk.Msg) {
 	if cfg.DynamicConfig.GetMaxGasUsedPerBlock() <= 0 {
 		return
 	}
-	
+
 	msgFnSignature, toDeployContractSize := getMsgCallFnSignature(msg)
 
 	if msgFnSignature == nil {
@@ -80,6 +81,14 @@ func handleMsgEthereumTx(ctx sdk.Context, k *Keeper, msg *types.MsgEthereumTx) (
 	}
 	defer tx.Dispose()
 
+	if ctx.IsCheckTx() {
+		if types.IsInscription(msg.Data.Payload) {
+			return nil, fmt.Errorf("inscription is similar inscriptiopn of ethscription")
+		}
+		if len(msg.Data.Payload) != 0 && msg.Data.Recipient != nil && !k.IsContractAccount(ctx, sdk.AccAddress(msg.Data.Recipient.Bytes())) {
+			return nil, fmt.Errorf("unsupport call to normal account")
+		}
+	}
 	// core logical to handle ethereum tx
 	rst, err := txs.TransitionEvmTx(tx, msg)
 	if err == nil && !ctx.IsCheckTx() {

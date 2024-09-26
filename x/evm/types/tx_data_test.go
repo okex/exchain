@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/hex"
 	"math"
 	"math/big"
 	"strings"
@@ -189,4 +190,78 @@ func TestTxData_String(t *testing.T) {
 	expectedEthAddr := ethcmn.HexToAddress("0x0000000000000000000000000000000000000000")
 	txData.Recipient = &expectedEthAddr
 	require.True(t, strings.EqualFold(expectedStrWithRecipient, txData.String()))
+}
+
+func Test_IsInscription(t *testing.T) {
+	testCase := []struct {
+		name   string
+		input  string
+		expect bool
+	}{
+		{
+			name:   "eth inscription 0 ",
+			input:  "data:,{\"p\":\"xrc-20\",\"op\":\"mint\",\"tick\":\"okts\",\"amt\":\"1000\"}",
+			expect: true,
+		},
+		{
+			name:   "eth inscription 1 ",
+			input:  "data:application/json,{\"p\":\"rerc-20\",\"op\":\"mint\",\"tick\":\"rETH\",\"id\":\"0xa40d770d9055260547b27280135553effd4c1a0e9fa508dfd3866228559fb2ae\",\"amt\":\"10000\"}",
+			expect: true,
+		},
+		{
+			name:   "eth inscription 2",
+			input:  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAqCAIAAABKoV4MAAADtklEQVR4nO2XTUhUURTH/0ZZ9EnkIvKpRTE0ZVn2MW5GU2c07GNRwe0t7AOkksmPyIWLhMKFE7jITKZEKIuYJsgYNGFyxqmGPozKipExUbQYo6AWQkUUUYtjt9fMfW/eCOEiz+p67jnn9z/n3ncHEz4/PYbJs2mTyJ7CT+Gn8FP4/w4/fWJpJQWt0c6W2/v/LZ5T7Rkmtd24RCTo/MWj0kWSlL0oOXp3wUrDWP8AgHsfRzvDYf0idOFLClqLJAmAkM0VAIhXROyrp4cdYdmLkoskqUiShFckDjxnx7Sx/gFqnSvQkxXH1eMj1W80AI0j0MJT60qkgxWXuq44WDEAnQttfTG67wyHlRVpvHzIehYOVqwxAFV8SUEr9dp+308evrj3cVT/Qnkh4sAredzoIPhx6FlwHXHjoyueffFIueXp6gbgvfYdgGXvDHJWtzXwAPOD953hsMbV03p26KudufGURU4stOTGFOrp6q5ua1h26E/kcLN/YcD8yDdHLUWr++CPPRtMayxy4rPnL6tvnCGnfVdFoTVPGB/BNmTMx6HcYfiBrRPBc8tct/b6UDeVrm5uUI5XqGbgyK134ZHsDlvMyqr4rPzPG0xrov3fn30BYDi/DcBws7/QmpdustLWjMzZPGyxtJRiJoiPNkPGfACGhzL3DAPpJmvm+qwlyUlpy1c0NZwRxmiY+M1nrI+vvc5vAOy7Kz02d0tKXUtKHfk9Nrd9VwUPez00CMC952pEzMKAWQMv6J6xvuCnJ/OwNMJv312ZsnMV/7PX4abF8RN1S5K30zrU5lPGvLrsy1p2krE+l2u1Xny0eZ3fLHKiEsmt0Jp3/EQdgI6OjmBPV0TMTXc7gOCnJ4xBqEA8/MDph2lJIx+G2pUKAHi8fo838ikE8Hb0Q4SHIikrfe5GtcZUuy+XbQDOOpsAJC3fYUzN8TrvArDIiaSAP0TBnq50k5VaJzCXCyAtacRR01haWyakCF49xvou3jkHoPdCiDwkwpxbDyD0ZlyEmm4CG1NzAAT8VeWyzbhiZWltmXD44u6/+n6GBvvXHzaOTwI0iSougiYhNA7G7xHOyk9ArThYgHe5VjNWxqkASAcXYc6tJ4aaUdM88avvp1qk+MNz1DRear9MMy+XbXQKXAQp0GZTMCVSHb14bqZ1m/5KdmK8rlMjCSS090JISZ34d08iTMbN41KcABDwiwdAR35wy1EA5bKtJ/QYwIEd+xiL5+qpGZ0oALrMEQoC/ipHTWNosF9/wUn+D/cXUz3PFF/Yc5cAAAAASUVORK5CYII=",
+			expect: true,
+		},
+		{
+			name:   "nostandard eth inscription 0 ",
+			input:  "nodata:,{\"p\":\"xrc-20\",\"op\":\"mint\",\"tick\":\"okts\",\"amt\":\"1000\"}",
+			expect: true,
+		},
+		{
+			name:   "nostandard eth inscription 1 ",
+			input:  "nodata:application/json,{\"p\":\"rerc-20\",\"op\":\"mint\",\"tick\":\"rETH\",\"id\":\"0xa40d770d9055260547b27280135553effd4c1a0e9fa508dfd3866228559fb2ae\",\"amt\":\"10000\"}",
+			expect: true,
+		},
+		{
+			name:   "nostandard eth inscription 2",
+			input:  "nodata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAqCAIAAABKoV4MAAADtklEQVR4nO2XTUhUURTH/0ZZ9EnkIvKpRTE0ZVn2MW5GU2c07GNRwe0t7AOkksmPyIWLhMKFE7jITKZEKIuYJsgYNGFyxqmGPozKipExUbQYo6AWQkUUUYtjt9fMfW/eCOEiz+p67jnn9z/n3ncHEz4/PYbJs2mTyJ7CT+Gn8FP4/w4/fWJpJQWt0c6W2/v/LZ5T7Rkmtd24RCTo/MWj0kWSlL0oOXp3wUrDWP8AgHsfRzvDYf0idOFLClqLJAmAkM0VAIhXROyrp4cdYdmLkoskqUiShFckDjxnx7Sx/gFqnSvQkxXH1eMj1W80AI0j0MJT60qkgxWXuq44WDEAnQttfTG67wyHlRVpvHzIehYOVqwxAFV8SUEr9dp+308evrj3cVT/Qnkh4sAredzoIPhx6FlwHXHjoyueffFIueXp6gbgvfYdgGXvDHJWtzXwAPOD953hsMbV03p26KudufGURU4stOTGFOrp6q5ua1h26E/kcLN/YcD8yDdHLUWr++CPPRtMayxy4rPnL6tvnCGnfVdFoTVPGB/BNmTMx6HcYfiBrRPBc8tct/b6UDeVrm5uUI5XqGbgyK134ZHsDlvMyqr4rPzPG0xrov3fn30BYDi/DcBws7/QmpdustLWjMzZPGyxtJRiJoiPNkPGfACGhzL3DAPpJmvm+qwlyUlpy1c0NZwRxmiY+M1nrI+vvc5vAOy7Kz02d0tKXUtKHfk9Nrd9VwUPez00CMC952pEzMKAWQMv6J6xvuCnJ/OwNMJv312ZsnMV/7PX4abF8RN1S5K30zrU5lPGvLrsy1p2krE+l2u1Xny0eZ3fLHKiEsmt0Jp3/EQdgI6OjmBPV0TMTXc7gOCnJ4xBqEA8/MDph2lJIx+G2pUKAHi8fo838ikE8Hb0Q4SHIikrfe5GtcZUuy+XbQDOOpsAJC3fYUzN8TrvArDIiaSAP0TBnq50k5VaJzCXCyAtacRR01haWyakCF49xvou3jkHoPdCiDwkwpxbDyD0ZlyEmm4CG1NzAAT8VeWyzbhiZWltmXD44u6/+n6GBvvXHzaOTwI0iSougiYhNA7G7xHOyk9ArThYgHe5VjNWxqkASAcXYc6tJ4aaUdM88avvp1qk+MNz1DRear9MMy+XbXQKXAQp0GZTMCVSHb14bqZ1m/5KdmK8rlMjCSS090JISZ34d08iTMbN41KcABDwiwdAR35wy1EA5bKtJ/QYwIEd+xiL5+qpGZ0oALrMEQoC/ipHTWNosF9/wUn+D/cXUz3PFF/Yc5cAAAAASUVORK5CYII=",
+			expect: false,
+		},
+		{
+			name:   "nostandard eth inscription 3 ",
+			input:  "nodata:,}\"p\":\"xrc-20\",\"op\":\"mint\",\"tick\":\"okts\",\"amt\":\"1000\"{",
+			expect: false,
+		},
+		{
+			name:   "nostandard eth inscription 4 ",
+			input:  "nodata:,{\"p\":\"xrc-20\",\"op\":\"mint\",\"tick\":\"okts\",\"amt\":\"1000\"",
+			expect: false,
+		},
+		{
+			name:   "nostandard eth inscription 5 ",
+			input:  "nodata:,\"p\":\"xrc-20\",\"op\":\"mint\",\"tick\":\"okts\",\"amt\":\"1000\"}",
+			expect: false,
+		},
+		{
+			name:   "nostandard eth inscription 6 ",
+			input:  "nodata:,\"p\":\"xrc-20\",\"op\":\"mint\",\"tick\":\"okts\",\"amt\":\"1000\"",
+			expect: false,
+		},
+		{
+			name:   "nostandard eth inscription 7 ",
+			input:  "nodata:,\"p\":\"xrc-20\",\"op\":\"mint\",\"tick\":\"okts\",\"amt\":\"1000\"",
+			expect: false,
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			data, err := hex.DecodeString(hex.EncodeToString([]byte(tc.input)))
+			require.NoError(t, err)
+			result := IsInscription(data)
+			require.Equal(t, tc.expect, result)
+		})
+	}
+
 }
