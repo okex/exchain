@@ -16,18 +16,14 @@ This repository hosts `OKTC`, the implementation of the OKTC based on the [Cosmo
 **Note**: Requires [Go 1.20](https://golang.org/dl/)
 
 ## Getting Started
-Refer to the [documentation](https://okexchain-docs.readthedocs.io/en/latest/index.html).
 
 - [Join the mainnet](https://github.com/okx/mainnet/blob/main/README.md)
-- [如何启动主网节点](https://forum.okt.club/d/174)
   
 ___
 - [Join the testnet](https://github.com/okx/testnets/blob/master/README.md)
-- [如何启动测试网节点](https://forum.okt.club/d/179)
 
 ___
 - [How to build a private chain](https://forum.okt.club/d/274-how-to-build-a-private-chain)
-- [如何搭建私有网络](https://forum.okt.club/d/273)
 
 
 
