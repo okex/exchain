@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/VictoriaMetrics/fastcache"
+	"github.com/tendermint/go-amino"
+
 	"github.com/okex/exchain/libs/system/trace"
 	abci "github.com/okex/exchain/libs/tendermint/abci/types"
 	cfg "github.com/okex/exchain/libs/tendermint/config"
@@ -21,7 +23,6 @@ import (
 	tmmath "github.com/okex/exchain/libs/tendermint/libs/math"
 	"github.com/okex/exchain/libs/tendermint/proxy"
 	"github.com/okex/exchain/libs/tendermint/types"
-	"github.com/tendermint/go-amino"
 )
 
 type TxInfoParser interface {
@@ -1037,9 +1038,6 @@ func (mem *CListMempool) Update(
 	if mem.config.Sealed {
 		return mem.updateSealed(height, txs, deliverTxResponses)
 	}
-	trace.GetElapsedInfo().AddInfo(trace.SimTx, fmt.Sprintf("%d", mem.info.txCount))
-	trace.GetElapsedInfo().AddInfo(trace.SimGasUsed, fmt.Sprintf("%d", mem.info.gasUsed))
-	mem.info.reset()
 
 	// Set height
 	atomic.StoreInt64(&mem.height, height)
@@ -1279,6 +1277,23 @@ func (mem *CListMempool) recheckTxs() {
 
 func (mem *CListMempool) GetConfig() *cfg.MempoolConfig {
 	return mem.config
+}
+
+func (mem *CListMempool) LogPgu(isBlockProducer bool) {
+	// no need to print pguInfo
+	if mem.config.Sealed {
+		return
+	}
+
+	if isBlockProducer {
+		trace.GetElapsedInfo().AddInfo(trace.SimTx, fmt.Sprintf("%d", mem.info.txCount))
+		trace.GetElapsedInfo().AddInfo(trace.SimGasUsed, fmt.Sprintf("%d", mem.info.gasUsed))
+	} else {
+		trace.GetElapsedInfo().AddInfo(trace.SimTx, fmt.Sprintf("%d", 0))
+		trace.GetElapsedInfo().AddInfo(trace.SimGasUsed, fmt.Sprintf("%d", 0))
+	}
+
+	mem.info.reset()
 }
 
 func MultiPriceBump(rawPrice *big.Int, priceBump int64) *big.Int {

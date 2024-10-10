@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"time"
+
 	"github.com/okex/exchain/libs/iavl"
 	iavlcfg "github.com/okex/exchain/libs/iavl/config"
 	"github.com/okex/exchain/libs/system/trace"
@@ -14,7 +16,6 @@ import (
 	sm "github.com/okex/exchain/libs/tendermint/state"
 	"github.com/okex/exchain/libs/tendermint/types"
 	tmtime "github.com/okex/exchain/libs/tendermint/types/time"
-	"time"
 )
 
 func (cs *State) dumpElapsed(trc *trace.Tracer, schema string) {
@@ -255,6 +256,11 @@ func (cs *State) finalizeCommit(height int64) {
 		}
 		return
 	}
+	//Add trace.SimTx After ApplyBlock using needLogPgu
+	err = cs.blockExec.MempoolLogPgu(cs.needLogPgu)
+	if err != nil {
+		cs.Logger.Error("Failed to print PGU log from mempool", "Height", height, "err", err)
+	}
 
 	//reset offset after commitGap
 	if iavl.EnableAsyncCommit &&
@@ -401,6 +407,7 @@ func (cs *State) updateToState(state sm.State) {
 	cs.LastValidators = state.LastValidators
 	cs.TriggeredTimeoutPrecommit = false
 	cs.state = state
+	cs.needLogPgu = false
 
 	// Finally, broadcast RoundState
 	cs.newStep()

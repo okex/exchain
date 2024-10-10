@@ -6,6 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/spf13/viper"
+
 	"github.com/okex/exchain/libs/system/trace"
 	cfg "github.com/okex/exchain/libs/tendermint/config"
 	cstypes "github.com/okex/exchain/libs/tendermint/consensus/types"
@@ -16,8 +19,6 @@ import (
 	"github.com/okex/exchain/libs/tendermint/p2p"
 	sm "github.com/okex/exchain/libs/tendermint/state"
 	"github.com/okex/exchain/libs/tendermint/types"
-	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 )
 
 //-----------------------------------------------------------------------------
@@ -162,6 +163,8 @@ type State struct {
 
 	vcMsg    *ViewChangeMessage
 	vcHeight map[int64]string
+	//actual proposer when avc
+	needLogPgu bool
 
 	preBlockTaskChan chan *preBlockTask
 	taskResultChan   chan *preBlockTaskRes
@@ -206,6 +209,7 @@ func NewState(
 		bt:               &BlockTransport{},
 		blockTimeTrc:     trace.NewTracer(trace.LastBlockTime),
 		vcHeight:         make(map[int64]string),
+		needLogPgu:       false,
 		taskResultChan:   make(chan *preBlockTaskRes, 1),
 		preBlockTaskChan: make(chan *preBlockTask, 1),
 	}

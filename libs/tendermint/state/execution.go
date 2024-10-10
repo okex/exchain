@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/tendermint/go-amino"
+
 	"github.com/okex/exchain/libs/system/trace"
 	abci "github.com/okex/exchain/libs/tendermint/abci/types"
 	cfg "github.com/okex/exchain/libs/tendermint/config"
@@ -17,7 +19,6 @@ import (
 	"github.com/okex/exchain/libs/tendermint/types"
 	tmtime "github.com/okex/exchain/libs/tendermint/types/time"
 	dbm "github.com/okex/exchain/libs/tm-db"
-	"github.com/tendermint/go-amino"
 )
 
 // -----------------------------------------------------------------------------
@@ -459,6 +460,15 @@ func (blockExec *BlockExecutor) commit(
 	}
 
 	return res, res.RetainHeight, err
+}
+
+func (blockExec *BlockExecutor) MempoolLogPgu(isBlockProducer bool) error {
+	clistmempool, ok := blockExec.mempool.(*mempl.CListMempool)
+	if !ok {
+		return fmt.Errorf("error on Printing PGU Log SimTx and SimGasUsed in mempool")
+	}
+	clistmempool.LogPgu(isBlockProducer)
+	return nil
 }
 
 func transTxsToBytes(txs types.Txs) [][]byte {
