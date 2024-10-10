@@ -104,10 +104,12 @@ if [ "$(uname -s)" == "Darwin" ]; then
     sed -i "" 's/"enable_call": false/"enable_call": true/' $HOME_SERVER/config/genesis.json
     sed -i "" 's/"enable_create": false/"enable_create": true/' $HOME_SERVER/config/genesis.json
     sed -i "" 's/"enable_contract_blocked_list": false/"enable_contract_blocked_list": true/' $HOME_SERVER/config/genesis.json
+    sed -i "" 's/"max_gas_limit_per_tx": "30000000"/"max_gas_limit_per_tx": "20000000000"/' $HOME_SERVER/config/genesis.json
 else 
     sed -i 's/"enable_call": false/"enable_call": true/' $HOME_SERVER/config/genesis.json
     sed -i 's/"enable_create": false/"enable_create": true/' $HOME_SERVER/config/genesis.json
     sed -i 's/"enable_contract_blocked_list": false/"enable_contract_blocked_list": true/' $HOME_SERVER/config/genesis.json
+    sed -i 's/"max_gas_limit_per_tx": "30000000"/"max_gas_limit_per_tx": "20000000000"/' $HOME_SERVER/config/genesis.json
 fi
 
 # Allocate genesis accounts (cosmos formatted addresses)
