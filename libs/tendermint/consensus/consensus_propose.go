@@ -234,7 +234,7 @@ func (cs *State) createProposalBlock() (block *types.Block, blockParts *types.Pa
 		cs.Logger.Error(fmt.Sprintf("enterPropose: %v", errPubKeyIsNotSet))
 		return
 	}
-	proposerAddr := cs.privValidatorPubKey.Address()
+	proposerAddr := cs.Validators.GetProposer().Address
 
 	return cs.blockExec.CreateProposalBlock(cs.Height, cs.state, commit, proposerAddr)
 }
