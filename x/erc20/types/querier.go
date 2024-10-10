@@ -19,3 +19,8 @@ type QueryTokenMappingResponse struct {
 	Path      string `json:"path,omitempty"`
 	BaseDenom string `json:"base_denom,omitempty"`
 }
+
+type TokenMappingByChannelRequest struct {
+	Channels  string `json:"channels"`
+	BaseDenom string `json:"base_denom"`
+}

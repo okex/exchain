@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	ethcmm "github.com/ethereum/go-ethereum/common"
 	"github.com/okex/exchain/libs/cosmos-sdk/codec"
@@ -25,6 +27,8 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 		switch path[0] {
 		case types.QueryParameters:
 			return queryParams(ctx, keeper)
+		case types.QueryTokenMappingChannel:
+			return queryTokenMappingChannel(ctx, req, keeper)
 		case types.QueryTokenMapping:
 			return queryTokenMapping(ctx, keeper)
 		case types.QueryDenomByContract:
@@ -42,6 +46,43 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 func queryParams(ctx sdk.Context, keeper Keeper) (res []byte, err sdk.Error) {
 	params := keeper.GetParams(ctx)
 	res, errUnmarshal := codec.MarshalJSONIndent(types.ModuleCdc, params)
+	if errUnmarshal != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", errUnmarshal.Error()))
+	}
+	return res, nil
+}
+
+func queryTokenMappingChannel(ctx sdk.Context, req abci.RequestQuery, keeper Keeper) ([]byte, error) {
+	var params types.TokenMappingByChannelRequest
+	err := keeper.cdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, common.ErrUnMarshalJSONFailed(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
+	}
+
+	path := transfertypes.PortID + "/" + strings.ReplaceAll(params.Channels, ",", "/"+transfertypes.PortID+"/")
+	trace := transfertypes.DenomTrace{
+		Path:      path,
+		BaseDenom: params.BaseDenom,
+	}
+	hash := trace.Hash()
+	_, found := keeper.transferKeeper.GetDenomTrace(ctx, hash)
+	if !found {
+		return nil, fmt.Errorf("the denom trace for the channel %s and denom %s is not found", params.Channels, params.BaseDenom)
+	}
+
+	hexHash := hex.EncodeToString(hash)
+	denom := transfertypes.DenomPrefix + "/" + hexHash
+	contract, found := keeper.GetContractByDenom(ctx, denom)
+	if !found {
+		return nil, fmt.Errorf("the erc20 contract for the channel %s and denom %s is not found", params.Channels, params.BaseDenom)
+	}
+	mapping := types.QueryTokenMappingResponse{
+		Denom:     denom,
+		Contract:  contract.String(),
+		Path:      trace.Path,
+		BaseDenom: trace.BaseDenom,
+	}
+	res, errUnmarshal := codec.MarshalJSONIndent(types.ModuleCdc, mapping)
 	if errUnmarshal != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("failed to marshal result to JSON", errUnmarshal.Error()))
 	}
