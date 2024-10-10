@@ -1089,7 +1089,7 @@ func PreRun(ctx *server.Context) error {
 	appconfig.RegisterDynamicConfig(ctx.Logger.With("module", "config"))
 
 	// check start flag conflicts
-	err := sanity.CheckStart()
+	err := sanity.CheckStart(nil)
 	if err != nil {
 		return err
 	}

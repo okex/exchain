@@ -969,7 +969,7 @@ func PreRun(ctx *server.Context, cmd *cobra.Command) error {
 	prepareSnapshotDataIfNeed(viper.GetString(server.FlagStartFromSnapshot), viper.GetString(flags.FlagHome), ctx.Logger)
 
 	// check start flag conflicts
-	err := sanity.CheckStart()
+	err := sanity.CheckStart(ctx)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,10 @@
 package sanity
 
 import (
+	"testing"
+
+	"github.com/spf13/cobra"
+
 	apptype "github.com/okex/exchain/app/types"
 	"github.com/okex/exchain/libs/cosmos-sdk/server"
 	"github.com/okex/exchain/libs/cosmos-sdk/store/types"
@@ -9,8 +13,6 @@ import (
 	sm "github.com/okex/exchain/libs/tendermint/state"
 	ttypes "github.com/okex/exchain/libs/tendermint/types"
 	"github.com/okex/exchain/x/evm/watcher"
-	"github.com/spf13/cobra"
-	"testing"
 )
 
 func getCommandNodeModeRpcPruningNothing() *cobra.Command {
@@ -93,7 +95,7 @@ func TestCheckStart(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
 			tt.cmdFunc()
-			if err = CheckStart(); (err != nil) != tt.wantErr {
+			if err = CheckStart(nil); (err != nil) != tt.wantErr {
 				t.Errorf("CheckStart() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			t.Log(err)
@@ -132,7 +134,7 @@ func TestCheckStartArchive(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var err error
-			if err = CheckStart(); (err != nil) != tt.wantErr {
+			if err = CheckStart(nil); (err != nil) != tt.wantErr {
 				t.Errorf("CheckStart() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			t.Log(err)

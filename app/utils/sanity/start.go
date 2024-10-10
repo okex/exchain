@@ -1,6 +1,9 @@
 package sanity
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/spf13/viper"
 
 	"github.com/okex/exchain/app/config"
@@ -11,6 +14,7 @@ import (
 	"github.com/okex/exchain/libs/tendermint/consensus"
 	"github.com/okex/exchain/libs/tendermint/state"
 	"github.com/okex/exchain/libs/tendermint/types"
+	db "github.com/okex/exchain/libs/tm-db"
 	"github.com/okex/exchain/x/evm/watcher"
 	"github.com/okex/exchain/x/infura"
 )
@@ -108,7 +112,7 @@ var (
 )
 
 // CheckStart check start command.If it has conflict pair above. then return the conflict error
-func CheckStart() error {
+func CheckStart(ctx *server.Context) error {
 	if viper.GetBool(FlagDisableSanity) {
 		return nil
 	}
@@ -129,5 +133,51 @@ func CheckStart() error {
 		}
 	}
 
+	rocksDBMisspelling(ctx)
 	return nil
+}
+
+func rocksDBMisspelling(ctx *server.Context) {
+	//A copy of all the constant variables indicating rocksDB option parameters
+	//in exchain/libs/tm-db/rocksdb.go
+	rocksDBConst := []string{
+		"block_size",
+		"block_cache",
+		"statistics",
+		"max_open_files",
+		"allow_mmap_reads",
+		"allow_mmap_writes",
+		"unordered_write",
+		"pipelined_write",
+	}
+	params := parseOptParams(viper.GetString(db.FlagRocksdbOpts))
+	if params == nil {
+		return
+	}
+	for _, str := range rocksDBConst {
+		delete(params, str)
+	}
+	if len(params) != 0 {
+		for inputOpt, _ := range params {
+			ctx.Logger.Info(fmt.Sprintf("%s %s failed to set rocksDB parameters, please double-check the spelling", db.FlagRocksdbOpts, inputOpt))
+		}
+	}
+
+	return
+}
+
+func parseOptParams(params string) map[string]struct{} {
+	if len(params) == 0 {
+		return nil
+	}
+
+	opts := make(map[string]struct{})
+	for _, s := range strings.Split(params, ",") {
+		opt := strings.Split(s, "=")
+		if len(opt) != 2 {
+			panic("Invalid options parameter, like this 'block_size=4kb,statistics=true")
+		}
+		opts[strings.TrimSpace(opt[0])] = struct{}{}
+	}
+	return opts
 }

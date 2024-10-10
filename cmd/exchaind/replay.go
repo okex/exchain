@@ -15,6 +15,9 @@ import (
 	"github.com/okex/exchain/x/evm/watcher"
 
 	"github.com/gogo/protobuf/jsonpb"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/okex/exchain/app/config"
 	okexchain "github.com/okex/exchain/app/types"
 	"github.com/okex/exchain/app/utils/appstatus"
@@ -36,8 +39,6 @@ import (
 	"github.com/okex/exchain/libs/tendermint/store"
 	"github.com/okex/exchain/libs/tendermint/types"
 	dbm "github.com/okex/exchain/libs/tm-db"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -66,7 +67,7 @@ func replayCmd(ctx *server.Context, registerAppFlagFn func(cmd *cobra.Command),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			// set external package flags
 			log.Println("--------- replay preRun ---------")
-			err := sanity.CheckStart()
+			err := sanity.CheckStart(ctx)
 			if err != nil {
 				fmt.Println(err)
 				return err
