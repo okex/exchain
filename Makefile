@@ -149,14 +149,18 @@ ifeq ($(DEBUG),true)
 	BUILD_FLAGS += -gcflags "all=-N -l"
 endif
 
+ifeq ($(PGO),true)
+	PGO_AUTO = -pgo=auto
+endif
+
 all: install
 
 install: exchain
 
 
 exchain: check_version
-	$(cgo_flags) go install -v $(BUILD_FLAGS) -tags "$(build_tags)" ./cmd/exchaind
-	$(cgo_flags) go install -v $(BUILD_FLAGS) -tags "$(build_tags)" ./cmd/exchaincli
+	$(cgo_flags) go install $(PGO_AUTO) -v $(BUILD_FLAGS) -tags "$(build_tags)" ./cmd/exchaind
+	$(cgo_flags) go install $(PGO_AUTO) -v $(BUILD_FLAGS) -tags "$(build_tags)" ./cmd/exchaincli
 
 check_version:
 	@sh $(shell pwd)/libs/check/check-version.sh $(GO_VERSION) $(ROCKSDB_VERSION)
@@ -210,11 +214,11 @@ format:
 
 build:
 ifeq ($(OS),Windows_NT)
-	go build $(BUILD_FLAGS) -tags "$(build_tags)" -o build/exchaind.exe ./cmd/exchaind
-	go build $(BUILD_FLAGS) -tags "$(build_tags)" -o build/exchaincli.exe ./cmd/exchaincli
+	go build $(PGO_AUTO) $(BUILD_FLAGS) -tags "$(build_tags)" -o build/exchaind.exe ./cmd/exchaind
+	go build $(PGO_AUTO) $(BUILD_FLAGS) -tags "$(build_tags)" -o build/exchaincli.exe ./cmd/exchaincli
 else
-	go build $(BUILD_FLAGS) -tags "$(build_tags)" -o build/exchaind ./cmd/exchaind
-	go build $(BUILD_FLAGS) -tags "$(build_tags)" -o build/exchaincli ./cmd/exchaincli
+	go build $(PGO_AUTO) $(BUILD_FLAGS) -tags "$(build_tags)" -o build/exchaind ./cmd/exchaind
+	go build $(PGO_AUTO) $(BUILD_FLAGS) -tags "$(build_tags)" -o build/exchaincli ./cmd/exchaincli
 endif
 
 
