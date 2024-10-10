@@ -265,6 +265,8 @@ func GetCmdQueryClientStatus(m *codec.CodecProxy, reg interfacetypes.InterfaceRe
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+
 	return cmd
 }
 
