@@ -1097,13 +1097,13 @@ func (api *PublicEthereumAPI) doCall(
 
 	return &simResponse, nil
 }
-func (api *PublicEthereumAPI) simDoCall(args rpctypes.CallArgs, cap uint64) (uint64, error) {
+func (api *PublicEthereumAPI) simDoCall(args rpctypes.CallArgs, cap uint64, blockNum rpctypes.BlockNumber) (uint64, error) {
 	// Create a helper to check if a gas allowance results in an executable transaction
 	executable := func(gas uint64) (*sdk.SimulationResponse, error) {
 		if gas != 0 {
 			args.Gas = (*hexutil.Uint64)(&gas)
 		}
-		return api.doCall(args, 0, big.NewInt(int64(cap)), true, nil)
+		return api.doCall(args, blockNum, big.NewInt(int64(cap)), true, nil)
 	}
 
 	// get exact gas limit
@@ -1164,7 +1164,15 @@ func (api *PublicEthereumAPI) EstimateGas(args rpctypes.CallArgs, blockNrOrHash 
 		args.GasPrice = api.gasPrice
 	}
 
-	estimatedGas, err := api.simDoCall(args, maxGasLimitPerTx)
+	blockNr := rpctypes.LatestBlockNumber
+	if blockNrOrHash != nil {
+		blockNr, err = api.backend.ConvertToBlockNumber(*blockNrOrHash)
+		if err != nil {
+			return 0, TransformDataError(err, "eth_estimateGas")
+		}
+	}
+
+	estimatedGas, err := api.simDoCall(args, maxGasLimitPerTx, blockNr)
 	if err != nil {
 		return 0, TransformDataError(err, "eth_estimateGas")
 	}
