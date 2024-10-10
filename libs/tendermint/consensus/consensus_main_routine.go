@@ -131,33 +131,6 @@ func (cs *State) handleMsg(mi msgInfo) (added bool) {
 	switch msg := msg.(type) {
 	case *ProposeResponseMessage:
 		cs.handleAVCProposal(msg.Proposal)
-
-	case *ViewChangeMessage:
-		if !GetActiveVC() {
-			return
-		}
-
-		// no need to handle duplicate vcMsg
-		if cs.vcMsg != nil && cs.vcMsg.Height >= msg.Height {
-			return
-		}
-
-		// enterNewHeight use cs.vcMsg
-		if msg.Height == cs.Height+1 {
-			cs.vcMsg = msg
-			cs.Logger.Info("handle vcMsg", "height", cs.Height, "vcMsg", cs.vcMsg)
-		} else if msg.Height == cs.Height {
-			// ApplyBlock of height-1 has finished
-			// at this height, it has enterNewHeight
-			// vc immediately
-			cs.vcMsg = msg
-			cs.Logger.Info("handle vcMsg", "height", cs.Height, "vcMsg", cs.vcMsg)
-			if cs.Step != cstypes.RoundStepNewHeight && cs.Round == 0 {
-				_, val := cs.Validators.GetByAddress(msg.NewProposer)
-				cs.enterNewRoundAVC(cs.Height, 0, val)
-			}
-		}
-
 	case *ProposalMessage:
 		// will not cause transition.
 		// once proposal is set, we can receive block parts
@@ -165,14 +138,6 @@ func (cs *State) handleMsg(mi msgInfo) (added bool) {
 			cs.handleAVCProposal(msg.Proposal)
 		}
 	case *BlockPartMessage:
-		// if avc and has 2/3 votes, it can use the blockPartsHeader from votes
-		if cs.HasVC && cs.ProposalBlockParts == nil && cs.Round == 0 {
-			prevotes := cs.Votes.Prevotes(cs.Round)
-			blockID, hasTwoThirds := prevotes.TwoThirdsMajority()
-			if hasTwoThirds && !blockID.IsZero() {
-				cs.ProposalBlockParts = types.NewPartSetFromHeader(blockID.PartsHeader)
-			}
-		}
 		// if the proposal is complete, we'll enterPrevote or tryFinalizeCommit
 		added, err = cs.addProposalBlockPart(msg, peerID)
 

@@ -38,8 +38,6 @@ type PeerRoundState struct {
 
 	// All commit precommits peer has for this height & CatchupCommitRound
 	CatchupCommit *bits.BitArray `json:"catchup_commit"`
-
-	AVCHeight int64 `json:"avc_height"`
 }
 
 // String returns a string representation of the PeerRoundState

@@ -85,7 +85,7 @@ type FilePVLastSignState struct {
 // it returns true if the HRS matches the arguments and the SignBytes are not empty (indicating
 // we have already signed for this HRS, and can reuse the existing signature).
 // It panics if the HRS matches the arguments, there's a SignBytes, but no Signature.
-func (lss *FilePVLastSignState) CheckHRS(height int64, round int, step int8, avc bool) (bool, error) {
+func (lss *FilePVLastSignState) CheckHRS(height int64, round int, step int8) (bool, error) {
 
 	if lss.Height > height {
 		return false, fmt.Errorf("height regression. Got %v, last height %v", height, lss.Height)
@@ -97,9 +97,6 @@ func (lss *FilePVLastSignState) CheckHRS(height int64, round int, step int8, avc
 		}
 
 		if lss.Round == round {
-			if avc {
-				return false, nil
-			}
 			if lss.Step > step {
 				return false, fmt.Errorf(
 					"step regression at height %v round %v. Got %v, last step %v",
@@ -306,7 +303,7 @@ func (pv *FilePV) signVote(chainID string, vote *types.Vote) error {
 
 	lss := pv.LastSignState
 
-	sameHRS, err := lss.CheckHRS(height, round, step, vote.HasVC)
+	sameHRS, err := lss.CheckHRS(height, round, step)
 	if err != nil {
 		return err
 	}
@@ -348,7 +345,7 @@ func (pv *FilePV) signProposal(chainID string, proposal *types.Proposal) error {
 
 	lss := pv.LastSignState
 
-	sameHRS, err := lss.CheckHRS(height, round, step, proposal.HasVC)
+	sameHRS, err := lss.CheckHRS(height, round, step)
 	if err != nil {
 		return err
 	}

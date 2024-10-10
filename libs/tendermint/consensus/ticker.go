@@ -112,7 +112,7 @@ func (t *timeoutTicker) timeoutRoutine() {
 				if newti.Round < ti.Round {
 					continue
 				} else if newti.Round == ti.Round {
-					if ti.Step > 0 && newti.Step <= ti.Step && !newti.ActiveViewChange {
+					if ti.Step > 0 && newti.Step <= ti.Step {
 						continue
 					}
 				}

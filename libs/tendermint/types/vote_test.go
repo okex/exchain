@@ -332,11 +332,9 @@ var voteAminoTestCases = []Vote{
 		ValidatorAddress: []byte("address1"),
 		ValidatorIndex:   1,
 		Signature:        []byte("signature1"),
-		HasVC:            true,
 	},
 	{
-		Type:  PrecommitType,
-		HasVC: false,
+		Type: PrecommitType,
 	},
 	{
 		Type:             ProposalType,
@@ -345,13 +343,11 @@ var voteAminoTestCases = []Vote{
 		ValidatorAddress: []byte(""),
 		ValidatorIndex:   math.MaxInt,
 		Signature:        []byte(""),
-		HasVC:            true,
 	},
 	{
 		Height:         math.MinInt64,
 		Round:          math.MinInt,
 		ValidatorIndex: math.MinInt,
-		HasVC:          true,
 	},
 }
 

@@ -62,11 +62,10 @@ type msgInfo struct {
 
 // internally generated messages which may update the state
 type timeoutInfo struct {
-	Duration         time.Duration         `json:"duration"`
-	Height           int64                 `json:"height"`
-	Round            int                   `json:"round"`
-	Step             cstypes.RoundStepType `json:"step"`
-	ActiveViewChange bool                  `json:"active-view-change"`
+	Duration time.Duration         `json:"duration"`
+	Height   int64                 `json:"height"`
+	Round    int                   `json:"round"`
+	Step     cstypes.RoundStepType `json:"step"`
 }
 
 func (ti *timeoutInfo) String() string {
@@ -160,7 +159,6 @@ type State struct {
 	prerunTx bool
 	bt       *BlockTransport
 
-	vcMsg    *ViewChangeMessage
 	vcHeight map[int64]string
 
 	preBlockTaskChan chan *preBlockTask
@@ -597,7 +595,7 @@ func (cs *State) BlockExec() *sm.BlockExecutor {
 
 //---------------------------------------------------------
 
-func CompareHRS(h1 int64, r1 int, s1 cstypes.RoundStepType, h2 int64, r2 int, s2 cstypes.RoundStepType, hasVC bool) int {
+func CompareHRS(h1 int64, r1 int, s1 cstypes.RoundStepType, h2 int64, r2 int, s2 cstypes.RoundStepType) int {
 	if h1 < h2 {
 		return -1
 	} else if h1 > h2 {
@@ -606,9 +604,6 @@ func CompareHRS(h1 int64, r1 int, s1 cstypes.RoundStepType, h2 int64, r2 int, s2
 	if r1 < r2 {
 		return -1
 	} else if r1 > r2 {
-		return 1
-	}
-	if hasVC {
 		return 1
 	}
 	if s1 < s2 {

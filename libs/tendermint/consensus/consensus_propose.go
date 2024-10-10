@@ -119,7 +119,7 @@ func (cs *State) enterPropose(height int64, round int) {
 	}()
 
 	// If we don't get the proposal and all block parts quick enough, enterPrevote
-	cs.timeoutTicker.ScheduleTimeout(timeoutInfo{Duration: cs.config.Propose(round), Height: height, Round: round, Step: cstypes.RoundStepPropose, ActiveViewChange: cs.HasVC})
+	cs.timeoutTicker.ScheduleTimeout(timeoutInfo{Duration: cs.config.Propose(round), Height: height, Round: round, Step: cstypes.RoundStepPropose})
 
 	if isBlockProducer == "y" {
 		logger.Info("enterPropose: Our turn to propose",
@@ -170,7 +170,6 @@ func (cs *State) defaultDecideProposal(height int64, round int) {
 	// Make proposal
 	propBlockID := types.BlockID{Hash: block.Hash(), PartsHeader: blockParts.Header()}
 	proposal := types.NewProposal(height, round, cs.ValidRound, propBlockID)
-	proposal.HasVC = cs.HasVC
 	if err := cs.privValidator.SignProposal(cs.state.ChainID, proposal); err == nil {
 
 		// send proposal and block parts on internal msg queue
@@ -388,13 +387,6 @@ func (cs *State) handleCompleteProposal(height int64) {
 		cs.enterPrevote(height, cs.Round)
 		if hasTwoThirds { // this is optimisation as this will be triggered when prevote is added
 			cs.enterPrecommit(height, cs.Round)
-		}
-	}
-	if cs.HasVC && cs.Round == 0 {
-		blockID, hasTwoThirds := cs.Votes.Precommits(cs.Round).TwoThirdsMajority()
-		cs.Logger.Info("avc and handleCompleteProposal", "2/3Precommit", hasTwoThirds, "proposal", cs.ProposalBlock.Hash(), "block", blockID.Hash)
-		if hasTwoThirds && !blockID.IsZero() && cs.ProposalBlock.HashesTo(blockID.Hash) {
-			cs.updateRoundStep(cs.Round, cstypes.RoundStepCommit)
 		}
 	}
 	if cs.Step == cstypes.RoundStepCommit {

@@ -90,7 +90,6 @@ type RoundState struct {
 	LastCommit                *types.VoteSet      `json:"last_commit"`  // Last precommits at Height-1
 	LastValidators            *types.ValidatorSet `json:"last_validators"`
 	TriggeredTimeoutPrecommit bool                `json:"triggered_timeout_precommit"`
-	HasVC                     bool                `json:"has_vc"` // active-view-change(enterNewRoundAVC) at this Height
 }
 
 // Compressed version of the RoundState for use in RPC

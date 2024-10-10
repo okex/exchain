@@ -3,7 +3,6 @@ package consensus
 import (
 	"fmt"
 	cstypes "github.com/okex/exchain/libs/tendermint/consensus/types"
-	"github.com/okex/exchain/libs/tendermint/types"
 	tmtime "github.com/okex/exchain/libs/tendermint/types/time"
 )
 
@@ -32,41 +31,30 @@ func (cs *State) enterNewRound(height int64, round int) {
 		return
 	}
 
-	cs.doNewRound(height, round, false, nil)
+	cs.doNewRound(height, round)
 }
 
-func (cs *State) doNewRound(height int64, round int, avc bool, val *types.Validator) {
+func (cs *State) doNewRound(height int64, round int) {
 	logger := cs.Logger.With("height", height, "round", round)
 	cs.initNewHeight()
-	if !avc {
-		if now := tmtime.Now(); cs.StartTime.After(now) {
-			logger.Info("Need to set a buffer and log message here for sanity.", "startTime", cs.StartTime, "now", now)
-		}
-		logger.Info(fmt.Sprintf("enterNewRound(%v/%v). Current: %v/%v/%v", height, round, cs.Height, cs.Round, cs.Step))
-
-		// Increment validators if necessary
-		validators := cs.Validators
-		if cs.Round < round {
-			validators = validators.Copy()
-			validators.IncrementProposerPriority(round - cs.Round)
-		}
-		cs.Validators = validators
-		cs.Votes.SetRound(round + 1) // also track next round (round+1) to allow round-skipping
-	} else {
-		cs.trc.Pin("NewRoundVC-%d", round)
-		logger.Info(fmt.Sprintf("enterNewRoundAVC(%v/%v). Current: %v/%v/%v", height, round, cs.Height, cs.Round, cs.Step))
-
-		cs.Validators.Proposer = val
-		if cs.Votes.Round() == 0 {
-			cs.Votes.SetRound(1) // also track next round (round+1) to allow round-skipping
-		}
+	if now := tmtime.Now(); cs.StartTime.After(now) {
+		logger.Info("Need to set a buffer and log message here for sanity.", "startTime", cs.StartTime, "now", now)
 	}
+	logger.Info(fmt.Sprintf("enterNewRound(%v/%v). Current: %v/%v/%v", height, round, cs.Height, cs.Round, cs.Step))
+
+	// Increment validators if necessary
+	validators := cs.Validators
+	if cs.Round < round {
+		validators = validators.Copy()
+		validators.IncrementProposerPriority(round - cs.Round)
+	}
+	cs.Validators = validators
+	cs.Votes.SetRound(round + 1) // also track next round (round+1) to allow round-skipping
 
 	// Setup new round
 	// we don't fire newStep for this step,
 	// but we fire an event, so update the round step first
 	cs.updateRoundStep(round, cstypes.RoundStepNewRound)
-	cs.HasVC = avc
 	if round == 0 {
 		// We've already reset these upon new height,
 		// and meanwhile we might have received a proposal
@@ -96,29 +84,7 @@ func (cs *State) doNewRound(height int64, round int, avc bool, val *types.Valida
 	}
 }
 
-func (cs *State) enterNewRoundAVC(height int64, round int, val *types.Validator) {
-	logger := cs.Logger.With("height", height, "round", round)
-	if round != 0 || cs.Round != 0 || cs.Height != height {
-		logger.Debug(fmt.Sprintf(
-			"enterNewRoundAVC(%v/%v): Invalid args. Current step: %v/%v/%v",
-			height,
-			round,
-			cs.Height,
-			cs.Round,
-			cs.Step))
-		return
-	}
-
-	cs.doNewRound(height, round, true, val)
-}
-
 // Enter: `timeoutNewHeight` by startTime (after timeoutCommit),
 func (cs *State) enterNewHeight(height int64) {
-	cs.Logger.Info("enterNewHeight", "vcMsg", cs.vcMsg, "proposer", cs.Validators.Proposer.Address)
-	if GetActiveVC() && cs.vcMsg != nil && cs.vcMsg.Validate(height, cs.Validators.Proposer.Address) {
-		_, val := cs.Validators.GetByAddress(cs.vcMsg.NewProposer)
-		cs.enterNewRoundAVC(height, 0, val)
-	} else {
-		cs.enterNewRound(height, 0)
-	}
+	cs.enterNewRound(height, 0)
 }

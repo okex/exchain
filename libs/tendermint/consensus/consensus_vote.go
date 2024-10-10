@@ -37,9 +37,6 @@ func (cs *State) tryAddVote(vote *types.Vote, peerID p2p.ID) (bool, error) {
 					vote.Type)
 				return added, err
 			}
-			if GetActiveVC() && vote.Round == 0 && vote.HasVC {
-				return added, err
-			}
 			cs.evpool.AddEvidence(voteErr.DuplicateVoteEvidence)
 			return added, err
 		} else if err == types.ErrVoteNonDeterministicSignature {
@@ -244,7 +241,6 @@ func (cs *State) signVote(
 		Timestamp:        cs.voteTime(),
 		Type:             msgType,
 		BlockID:          types.BlockID{Hash: hash, PartsHeader: header},
-		HasVC:            cs.HasVC,
 	}
 
 	err := cs.privValidator.SignVote(cs.state.ChainID, vote)

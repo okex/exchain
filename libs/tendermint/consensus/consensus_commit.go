@@ -324,10 +324,6 @@ func (cs *State) updateToState(state sm.State) {
 	//		cs.state.LastBlockHeight+1, cs.Height))
 	//}
 
-	cs.HasVC = false
-	if cs.vcMsg != nil && cs.vcMsg.Height <= cs.Height {
-		cs.vcMsg = nil
-	}
 	for k, _ := range cs.vcHeight {
 		if k <= cs.Height {
 			delete(cs.vcHeight, k)
