@@ -70,7 +70,7 @@ func (q QueryHandler) Query(request wasmvmtypes.QueryRequest, gasLimit uint64) (
 }
 
 func (q QueryHandler) GasConsumed() uint64 {
-	return q.Ctx.GasMeter().GasConsumed()
+	return q.gasRegister.ToWasmVMGas(q.Ctx.GasMeter().GasConsumed())
 }
 
 type CustomQuerier func(ctx sdk.Context, request json.RawMessage) ([]byte, error)
