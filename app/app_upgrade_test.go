@@ -238,9 +238,7 @@ func (s2 *simpleAppModule) EndBlock(s sdk.Context, block abci.RequestEndBlock) [
 
 func setupModuleBasics(bs ...module.AppModule) *module.Manager {
 	basis := []module.AppModule{}
-	for _, v := range bs {
-		basis = append(basis, v)
-	}
+	basis = append(basis, bs...)
 	return module.NewManager(
 		basis...,
 	)

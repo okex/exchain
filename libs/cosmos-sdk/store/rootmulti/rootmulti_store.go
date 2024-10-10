@@ -1504,9 +1504,7 @@ func (src Store) Copy() *Store {
 		StoreInfos: make([]storeInfo, 0),
 	}
 
-	for _, info := range src.lastCommitInfo.StoreInfos {
-		dst.lastCommitInfo.StoreInfos = append(dst.lastCommitInfo.StoreInfos, info)
-	}
+	dst.lastCommitInfo.StoreInfos = append(dst.lastCommitInfo.StoreInfos, src.lastCommitInfo.StoreInfos...)
 
 	for key, value := range src.storesParams {
 		dst.storesParams[key] = value
@@ -1520,13 +1518,9 @@ func (src Store) Copy() *Store {
 		dst.keysByName[key] = value
 	}
 
-	for _, value := range src.pruneHeights {
-		dst.pruneHeights = append(dst.pruneHeights, value)
-	}
+	dst.pruneHeights = append(dst.pruneHeights, src.pruneHeights...)
 
-	for _, value := range src.versions {
-		dst.versions = append(dst.versions, value)
-	}
+	dst.versions = append(dst.versions, src.versions...)
 
 	return dst
 }
