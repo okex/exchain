@@ -430,7 +430,7 @@ func TestParallelTxs(t *testing.T) {
 		// ## only cosmos txs ##
 		// #####################
 		{
-			"5 cosmos txs, 0 group: a->b b->c c->d d->e e->f",
+			"5 cosmos txs, 1 group: a->b b->c c->d d->e e->f",
 			func(t *testing.T, chain *Chain, isParallel bool) ([]*abci.ResponseDeliverTx, []byte, []byte) {
 
 				var rawTxs [][]byte
@@ -443,7 +443,22 @@ func TestParallelTxs(t *testing.T) {
 			[]uint32{0, 0, 0, 0, 0},
 		},
 		{
-			"4 cosmos txs, 1 Failed cosmos tx, 0 group: a->b failed(b->c) / d->e e->f f->g",
+			"4 cosmos txs, 1 Failed cosmos tx, 1 group: a->b failed(b->c) b->c c->d d->f",
+			func(t *testing.T, chain *Chain, isParallel bool) ([]*abci.ResponseDeliverTx, []byte, []byte) {
+
+				var rawTxs [][]byte
+				rawTxs = append(rawTxs, createTokenSendTx(t, chain, 0))
+				rawTxs = append(rawTxs, createFailedTokenSendTx(t, chain, 1))
+				for i := 2; i < 5; i++ {
+					rawTxs = append(rawTxs, createTokenSendTx(t, chain, i))
+				}
+				ret := runTxs(chain, rawTxs, isParallel)
+				return ret, resultHash(ret), chain.app.BaseApp.LastCommitID().Hash
+			},
+			[]uint32{0, 61034, 0, 0, 0},
+		},
+		{
+			"4 cosmos txs, 1 Failed cosmos tx, 2 group: a->b failed(b->c) / d->e e->f f->g",
 			func(t *testing.T, chain *Chain, isParallel bool) ([]*abci.ResponseDeliverTx, []byte, []byte) {
 
 				var rawTxs [][]byte
@@ -458,7 +473,7 @@ func TestParallelTxs(t *testing.T) {
 			[]uint32{0, 61034, 0, 0, 0},
 		},
 		{
-			"4 cosmos txs, 1 AnteErr cosmos tx, 0 group: a->b AnteErr(b->c) c->d d->e e->f",
+			"4 cosmos txs, 1 AnteErr cosmos tx, 1 group: a->b AnteErr(b->c) c->d d->e e->f",
 			func(t *testing.T, chain *Chain, isParallel bool) ([]*abci.ResponseDeliverTx, []byte, []byte) {
 
 				var rawTxs [][]byte
@@ -473,7 +488,7 @@ func TestParallelTxs(t *testing.T) {
 			[]uint32{0, 5, 0, 0, 0},
 		},
 		{
-			"4 failed cosmos txs, 1 AnteErr cosmos tx, 0 group",
+			"4 failed cosmos txs, 1 AnteErr cosmos tx, 1 group",
 			func(t *testing.T, chain *Chain, isParallel bool) ([]*abci.ResponseDeliverTx, []byte, []byte) {
 
 				var rawTxs [][]byte
@@ -488,7 +503,7 @@ func TestParallelTxs(t *testing.T) {
 			[]uint32{61034, 5, 61034, 61034, 61034},
 		},
 		{
-			"3 cosmos txs, 1 failed cosmos tx, 1 AnteErr cosmos tx, 0 group: a->b b->c c->d d->e e->f",
+			"3 cosmos txs, 1 failed cosmos tx, 1 AnteErr cosmos tx, 1 group: a->b b->c c->d d->e e->f",
 			func(t *testing.T, chain *Chain, isParallel bool) ([]*abci.ResponseDeliverTx, []byte, []byte) {
 
 				var rawTxs [][]byte
@@ -504,7 +519,7 @@ func TestParallelTxs(t *testing.T) {
 			[]uint32{0, 61034, 5, 0, 0},
 		},
 		{
-			"5 failed cosmos txs, 0 group: a->b b->c c->d d->e e->f",
+			"5 failed cosmos txs, 1 group: a->b b->c c->d d->e e->f",
 			func(t *testing.T, chain *Chain, isParallel bool) ([]*abci.ResponseDeliverTx, []byte, []byte) {
 
 				var rawTxs [][]byte
@@ -515,6 +530,69 @@ func TestParallelTxs(t *testing.T) {
 				return ret, resultHash(ret), chain.app.BaseApp.LastCommitID().Hash
 			},
 			[]uint32{61034, 61034, 61034, 61034, 61034},
+		},
+		{
+			"5 cosmos txs, 2 group: a->b b->c / d->e e->f f->g",
+			func(t *testing.T, chain *Chain, isParallel bool) ([]*abci.ResponseDeliverTx, []byte, []byte) {
+
+				var rawTxs [][]byte
+				for i := 0; i < 2; i++ {
+					rawTxs = append(rawTxs, createTokenSendTx(t, chain, i))
+				}
+				for i := 3; i < 6; i++ {
+					rawTxs = append(rawTxs, createTokenSendTx(t, chain, i))
+				}
+				ret := runTxs(chain, rawTxs, isParallel)
+				return ret, resultHash(ret), chain.app.BaseApp.LastCommitID().Hash
+			},
+			[]uint32{0, 0, 0, 0, 0},
+		},
+		{
+			"4 cosmos txs, 1 AnteErr cosmos tx, 2 group: a->b AnteErr(b->c) / d->e e->f f->g",
+			func(t *testing.T, chain *Chain, isParallel bool) ([]*abci.ResponseDeliverTx, []byte, []byte) {
+
+				var rawTxs [][]byte
+				rawTxs = append(rawTxs, createTokenSendTx(t, chain, 0))
+				rawTxs = append(rawTxs, createAnteErrTokenSendTx(t, chain, 1))
+				for i := 3; i < 6; i++ {
+					rawTxs = append(rawTxs, createTokenSendTx(t, chain, i))
+				}
+				ret := runTxs(chain, rawTxs, isParallel)
+				return ret, resultHash(ret), chain.app.BaseApp.LastCommitID().Hash
+			},
+			[]uint32{0, 5, 0, 0, 0},
+		},
+		{
+			"3 cosmos txs, 1 failed cosmos tx, 1 AnteErr cosmos tx, 2 group: a->b failed(b->c) / AnteErr(d->e) e->f f->g",
+			func(t *testing.T, chain *Chain, isParallel bool) ([]*abci.ResponseDeliverTx, []byte, []byte) {
+
+				var rawTxs [][]byte
+				rawTxs = append(rawTxs, createTokenSendTx(t, chain, 0))
+				rawTxs = append(rawTxs, createFailedTokenSendTx(t, chain, 1))
+				rawTxs = append(rawTxs, createAnteErrTokenSendTx(t, chain, 3))
+				for i := 4; i < 6; i++ {
+					rawTxs = append(rawTxs, createTokenSendTx(t, chain, i))
+				}
+				ret := runTxs(chain, rawTxs, isParallel)
+				return ret, resultHash(ret), chain.app.BaseApp.LastCommitID().Hash
+			},
+			[]uint32{0, 61034, 5, 0, 0},
+		},
+		{
+			"3 cosmos txs, 1 failed cosmos tx, 1 AnteErr cosmos tx, 2 group: a->b failed(b->c) AnteErr(d->e) / e->f f->g",
+			func(t *testing.T, chain *Chain, isParallel bool) ([]*abci.ResponseDeliverTx, []byte, []byte) {
+
+				var rawTxs [][]byte
+				rawTxs = append(rawTxs, createTokenSendTx(t, chain, 0))
+				rawTxs = append(rawTxs, createFailedTokenSendTx(t, chain, 1))
+				rawTxs = append(rawTxs, createAnteErrTokenSendTx(t, chain, 2))
+				for i := 4; i < 6; i++ {
+					rawTxs = append(rawTxs, createTokenSendTx(t, chain, i))
+				}
+				ret := runTxs(chain, rawTxs, isParallel)
+				return ret, resultHash(ret), chain.app.BaseApp.LastCommitID().Hash
+			},
+			[]uint32{0, 61034, 5, 0, 0},
 		},
 		// #####################
 		// ###### mix txs ######

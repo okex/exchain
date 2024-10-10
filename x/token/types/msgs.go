@@ -2,6 +2,10 @@
 package types
 
 import (
+	"strings"
+
+	ethcmm "github.com/ethereum/go-ethereum/common"
+
 	sdk "github.com/okex/exchain/libs/cosmos-sdk/types"
 	"github.com/okex/exchain/x/common"
 )
@@ -14,7 +18,6 @@ const (
 	TotalSupplyUpperbound = int64(9 * 1e10)
 )
 
-//
 type MsgTokenIssue struct {
 	Description    string         `json:"description"`
 	Symbol         string         `json:"symbol"`
@@ -250,6 +253,10 @@ func (msg MsgSend) GetSignBytes() []byte {
 
 func (msg MsgSend) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.FromAddress}
+}
+
+func (msg MsgSend) CalFromAndToForPara() (string, string) {
+	return strings.ToLower(ethcmm.BytesToAddress(msg.FromAddress).String()[2:]), strings.ToLower(ethcmm.BytesToAddress(msg.ToAddress).String()[2:])
 }
 
 // MsgTransferOwnership - high level transaction of the coin module
