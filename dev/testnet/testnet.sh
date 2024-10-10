@@ -26,7 +26,7 @@ bab6c32fa95f3a54ecb7d32869e32e85a25d2e08,\
 testnet-node-ids
 
 
-while getopts "r:isn:b:p:c:Sxwk:" opt; do
+while getopts "r:isn:f:b:p:c:Sxwk:" opt; do
   case $opt in
   i)
     echo "OKCHAIN_INIT"
@@ -60,6 +60,10 @@ while getopts "r:isn:b:p:c:Sxwk:" opt; do
     echo "NUM_NODE=$OPTARG"
     NUM_NODE=$OPTARG
     ;;
+  f)
+    echo "OKCHAIN_RESTART"
+    OKCHAIN_RESTART=1
+    ;;
   b)
     echo "BIN_NAME=$OPTARG"
     BIN_NAME=$OPTARG
@@ -80,20 +84,25 @@ done
 
 echorun() {
   echo "------------------------------------------------------------------------------------------------"
-  echo "["$@"]"
-  $@
+  echo "[""$@""]"
+  eval "$@"
   echo "------------------------------------------------------------------------------------------------"
 }
 
 killbyname() {
   NAME=$1
-  ps -ef|grep "$NAME"|grep -v grep |awk '{print "kill -9 "$2", "$8}'
-  ps -ef|grep "$NAME"|grep -v grep |awk '{print "kill -9 "$2}' | sh
+  killmode=9
+  if [ "$2" == "true" ]; then
+    killmode=2
+  fi
+  ps -ef | grep "$NAME" | grep -v grep | awk -v mode="$killmode" '{print "kill -" mode, $2, $8}'
+  ps -ef | grep "$NAME" | grep -v grep | awk -v mode="$killmode" '{print "kill -" mode, $2}' | sh
   echo "All <$NAME> killed!"
+  sleep 5
 }
 
 init() {
-  killbyname ${BIN_NAME}
+  killbyname ${BIN_NAME} false
 
   (cd ${OKCHAIN_TOP} && make install VenusHeight=1)
 
@@ -108,7 +117,7 @@ init() {
     --keyring-backend test
 }
 recover() {
-  killbyname ${BIN_NAME}
+  killbyname ${BIN_NAME} true
   (cd ${OKCHAIN_TOP} && make install VenusHeight=1)
   rm -rf cache
   cp -rf nodecache cache
@@ -121,24 +130,29 @@ run() {
   p2pport=$3
   rpcport=$4
   restport=$5
-  p2p_seed_opt=$6
-  p2p_seed_arg=$7
+  restart=$6
+  p2p_seed_opt=$7
+  p2p_seed_arg=$8
+  out=">>"
 
+  if [ "$restart" == "false" ]; then
+    out=">"
+    if [ "$(uname -s)" == "Darwin" ]; then
+        sed -i "" 's/"enable_call": false/"enable_call": true/' cache/node${index}/exchaind/config/genesis.json
+        sed -i "" 's/"enable_create": false/"enable_create": true/' cache/node${index}/exchaind/config/genesis.json
+        sed -i "" 's/"enable_contract_blocked_list": false/"enable_contract_blocked_list": true/' cache/node${index}/exchaind/config/genesis.json
+    else
+        sed -i 's/"enable_call": false/"enable_call": true/' cache/node${index}/exchaind/config/genesis.json
+        sed -i 's/"enable_create": false/"enable_create": true/' cache/node${index}/exchaind/config/genesis.json
+        sed -i 's/"enable_contract_blocked_list": false/"enable_contract_blocked_list": true/' cache/node${index}/exchaind/config/genesis.json
+    fi
 
-  if [ "$(uname -s)" == "Darwin" ]; then
-      sed -i "" 's/"enable_call": false/"enable_call": true/' cache/node${index}/exchaind/config/genesis.json
-      sed -i "" 's/"enable_create": false/"enable_create": true/' cache/node${index}/exchaind/config/genesis.json
-      sed -i "" 's/"enable_contract_blocked_list": false/"enable_contract_blocked_list": true/' cache/node${index}/exchaind/config/genesis.json
-  else
-      sed -i 's/"enable_call": false/"enable_call": true/' cache/node${index}/exchaind/config/genesis.json
-      sed -i 's/"enable_create": false/"enable_create": true/' cache/node${index}/exchaind/config/genesis.json
-      sed -i 's/"enable_contract_blocked_list": false/"enable_contract_blocked_list": true/' cache/node${index}/exchaind/config/genesis.json
+    exchaind add-genesis-account 0xbbE4733d85bc2b90682147779DA49caB38C0aA1F 900000000okt --home cache/node${index}/exchaind
+    exchaind add-genesis-account 0x4C12e733e58819A1d3520f1E7aDCc614Ca20De64 900000000okt --home cache/node${index}/exchaind
+    exchaind add-genesis-account 0x83D83497431C2D3FEab296a9fba4e5FaDD2f7eD0 900000000okt --home cache/node${index}/exchaind
+    exchaind add-genesis-account 0x2Bd4AF0C1D0c2930fEE852D07bB9dE87D8C07044 900000000okt --home cache/node${index}/exchaind
   fi
 
-  exchaind add-genesis-account 0xbbE4733d85bc2b90682147779DA49caB38C0aA1F 900000000okt --home cache/node${index}/exchaind
-  exchaind add-genesis-account 0x4C12e733e58819A1d3520f1E7aDCc614Ca20De64 900000000okt --home cache/node${index}/exchaind
-  exchaind add-genesis-account 0x83D83497431C2D3FEab296a9fba4e5FaDD2f7eD0 900000000okt --home cache/node${index}/exchaind
-  exchaind add-genesis-account 0x2Bd4AF0C1D0c2930fEE852D07bB9dE87D8C07044 900000000okt --home cache/node${index}/exchaind
 
   LOG_LEVEL=main:info,*:error,consensus:error,state:info
 
@@ -169,23 +183,25 @@ run() {
     --consensus-role=v$index \
     --active-view-change=true \
     ${Test_CASE} \
-    --keyring-backend test >cache/val${index}.log 2>&1 &
+    --keyring-backend test $out cache/val${index}.log 2>&1 &
 
 #     --iavl-enable-async-commit \    --consensus-testcase case12.json \
 #     --upload-delta \
 #     --enable-preruntx \
 #     --mempool.node_key_whitelist="nodeKey1,nodeKey2" \
 #    --mempool.node_key_whitelist ${WHITE_LIST} \
+    sleep 3
 }
 
 function start() {
-  killbyname ${BIN_NAME}
+  restart=$2
+  killbyname ${BIN_NAME} $restart
   index=0
 
   echo "============================================"
   echo "=========== Startup seed node...============"
   ((restport = REST_PORT)) # for evm tx
-  run $index true ${seedp2pport} ${seedrpcport} $restport
+  run $index true ${seedp2pport} ${seedrpcport} $restport $restart
   seed=$(exchaind tendermint show-node-id --home cache/node${index}/exchaind)
 
   echo "============================================"
@@ -194,9 +210,13 @@ function start() {
     ((p2pport = BASE_PORT_PREFIX + index * 100 + P2P_PORT_SUFFIX))
     ((rpcport = BASE_PORT_PREFIX + index * 100 + RPC_PORT_SUFFIX))  # for exchaincli
     ((restport = index * 100 + REST_PORT)) # for evm tx
-    run $index false ${p2pport} ${rpcport} $restport --p2p.seeds ${seed}@${IP}:${seedp2pport}
+    run $index false ${p2pport} ${rpcport} $restport $restart --p2p.seeds ${seed}@${IP}:${seedp2pport}
   done
-  echo "start node done"
+  if [ "$restart" == "true" ]; then
+    echo "restart node done"
+  else
+    echo "start node done"
+  fi
 }
 
 if [ -z ${IP} ]; then
@@ -213,5 +233,9 @@ if [ ! -z "${OKCHAIN_RECOVER}" ]; then
 fi
 
 if [ ! -z "${OKCHAIN_START}" ]; then
-  start ${NUM_NODE}
+  start ${NUM_NODE} false
+fi
+
+if [ ! -z "${OKCHAIN_RESTART}" ]; then
+  start ${NUM_NODE} true
 fi

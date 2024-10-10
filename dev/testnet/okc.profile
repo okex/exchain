@@ -1,9 +1,9 @@
 BIN_NAME=exchaind
-OKCHAIN_TOP=${GOPATH}/src/github.com/okex/exchain
+CUR=`pwd`
+OKCHAIN_TOP="${CUR%/*/*}"
 OKCHAIN_BIN=${OKCHAIN_TOP}/build
 OKCHAIN_BIN=${GOPATH}/bin
-OKCHAIN_NET_TOP=`pwd`
-OKCHAIN_NET_CACHE=${OKCHAIN_NET_TOP}/cache
+OKCHAIN_NET_CACHE=${CUR}/cache
 CHAIN_ID="exchain-67"
 
 
