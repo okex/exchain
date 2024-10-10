@@ -90,11 +90,19 @@ func (r *RedisClient) ResetMostRecentHeightAfterUpload(targetHeight int64, uploa
 	return res, mrh, err
 }
 
-func (r *RedisClient) SetBlock(height int64, bytes []byte) error {
+func (r *RedisClient) SetBlock(height int64, round int, bytes []byte) error {
 	if len(bytes) == 0 {
 		return fmt.Errorf("block is empty")
 	}
-	req := r.rdb.SetNX(context.Background(), genBlockKey(height), bytes, r.ttl)
+	req := r.rdb.SetNX(context.Background(), genBlockKey(height, round), bytes, r.ttl)
+	return req.Err()
+}
+
+func (r *RedisClient) SetBlockParts(height int64, round int, bytes []byte) error {
+	if len(bytes) == 0 {
+		return fmt.Errorf("block is empty")
+	}
+	req := r.rdb.SetNX(context.Background(), genBlockPartsKey(height, round), bytes, r.ttl)
 	return req.Err()
 }
 
@@ -106,8 +114,19 @@ func (r *RedisClient) SetDeltas(height int64, bytes []byte) error {
 	return req.Err()
 }
 
-func (r *RedisClient) GetBlock(height int64) ([]byte, error) {
-	bytes, err := r.rdb.Get(context.Background(), genBlockKey(height)).Bytes()
+func (r *RedisClient) GetBlock(height int64, round int) ([]byte, error) {
+	bytes, err := r.rdb.Get(context.Background(), genBlockKey(height, round)).Bytes()
+	if err == redis.Nil {
+		return nil, fmt.Errorf("get empty block")
+	}
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
+}
+
+func (r *RedisClient) GetBlockParts(height int64, round int) ([]byte, error) {
+	bytes, err := r.rdb.Get(context.Background(), genBlockPartsKey(height, round)).Bytes()
 	if err == redis.Nil {
 		return nil, fmt.Errorf("get empty block")
 	}
@@ -137,8 +156,20 @@ func (r *RedisClient) getMostRecentHeight() (mrh int64) {
 	return
 }
 
-func genBlockKey(height int64) string {
-	return fmt.Sprintf("BH:%d", height)
+func (r *RedisClient) Pub(msg []byte) {
+	r.rdb.Publish(context.Background(), "block", msg)
+}
+
+func (r *RedisClient) SubChannel() *redis.PubSub {
+	return r.rdb.Subscribe(context.Background(), "block")
+}
+
+func genBlockKey(height int64, round int) string {
+	return fmt.Sprintf("BH-%d:%d", height, round)
+}
+
+func genBlockPartsKey(height int64, round int) string {
+	return fmt.Sprintf("BPH-%d:%d", height, round)
 }
 
 func genDeltaKey(height int64) string {

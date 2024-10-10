@@ -172,6 +172,8 @@ func (cs *State) defaultDecideProposal(height int64, round int) {
 	proposal := types.NewProposal(height, round, cs.ValidRound, propBlockID)
 	proposal.HasVC = cs.HasVC
 	if err := cs.privValidator.SignProposal(cs.state.ChainID, proposal); err == nil {
+		pi := ProposalBlockMessage{proposal, block}
+		cs.blockCtx.deltaBroker.Pub(pi.Marshal())
 
 		// send proposal and block parts on internal msg queue
 		cs.sendInternalMessage(msgInfo{&ProposalMessage{proposal}, ""})
@@ -343,24 +345,7 @@ func (cs *State) addProposalBlockPart(msg *BlockPartMessage, peerID p2p.ID) (add
 		return
 	}
 	automation.AddBlockTimeOut(height, round)
-	added, err = cs.addBlockPart(height, round, part, peerID)
-
-	if added && cs.ProposalBlockParts.IsComplete() {
-		err = cs.unmarshalBlock()
-		if err != nil {
-			return
-		}
-		cs.trc.Pin("lastPart")
-		cs.bt.onRecvBlock(height)
-		cs.bt.totalParts = cs.ProposalBlockParts.Total()
-		if cs.prerunTx {
-			cs.blockExec.NotifyPrerun(cs.ProposalBlock)
-		}
-		// NOTE: it's possible to receive complete proposal blocks for future rounds without having the proposal
-		cs.Logger.Info("Received complete proposal block", "height", cs.ProposalBlock.Height, "hash", cs.ProposalBlock.Hash())
-		cs.eventBus.PublishEventCompleteProposal(cs.CompleteProposalEvent())
-	}
-	return
+	return cs.addBlockPart(height, round, part, peerID)
 }
 
 func (cs *State) handleCompleteProposal(height int64) {
