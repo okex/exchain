@@ -35,6 +35,7 @@ import (
 	govrest "github.com/okex/exchain/x/gov/client/rest"
 	orderrest "github.com/okex/exchain/x/order/client/rest"
 	paramsclient "github.com/okex/exchain/x/params/client"
+	paramsrest "github.com/okex/exchain/x/params/client/rest"
 	slashingrest "github.com/okex/exchain/x/slashing/client/rest"
 	stakingrest "github.com/okex/exchain/x/staking/client/rest"
 	"github.com/okex/exchain/x/token"
@@ -102,6 +103,7 @@ func registerRoutesV1(rs *lcd.RestServer, pathPrefix string) {
 	)
 	mintrest.RegisterRoutes(rs.CliCtx, v1Router)
 	ibctransferrest.RegisterOriginRPCRoutersForGRPC(rs.CliCtx, v1Router)
+	paramsrest.RegisterRoutes(rs.CliCtx, v1Router)
 }
 
 func registerRoutesV2(rs *lcd.RestServer, pathPrefix string) {
