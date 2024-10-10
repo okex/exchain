@@ -26,6 +26,7 @@ func (tm *TreeMap) addNewTree(tree *MutableTree) {
 	defer tm.mtx.Unlock()
 	if _, ok := tm.mutableTreeSavedMap[tree.GetModuleName()]; !ok {
 		tm.mutableTreeSavedMap[tree.GetModuleName()] = tree
+		tree.ndb.cleanPruningInDB()
 		go tree.commitSchedule()
 		if EnablePruningHistoryState {
 			go tree.pruningSchedule()

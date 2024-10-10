@@ -5,6 +5,7 @@ import (
 	"container/list"
 	"encoding/binary"
 	"fmt"
+	"strconv"
 
 	cmap "github.com/orcaman/concurrent-map"
 
@@ -269,13 +270,69 @@ func (ndb *nodeDB) DeleteVersion(batch dbm.Batch, version int64, checkLatestVers
 		return err
 	}
 
-	ndb.deleteVersion(batch, version, checkLatestVersion)
+	ndb.deleteVersion(batch, version, checkLatestVersion, false)
 	return nil
 }
 
-func (ndb *nodeDB) deleteVersion(batch dbm.Batch, version int64, checkLatestVersion bool) {
+func (ndb *nodeDB) deleteVersion(batch dbm.Batch, version int64, checkLatestVersion bool, writeToDB bool) {
+	if !writeToDB {
+		ndb.deleteOrphans(batch, version)
+		ndb.deleteRoot(batch, version, checkLatestVersion, writeToDB)
+		return
+	}
+	ndb.setPruningRoot(version, checkLatestVersion)
+	ndb.deleteRoot(batch, version, checkLatestVersion, writeToDB)
+	ndb.deleteOrphansFromDB(version)
+	ndb.deletePruningRoot()
+}
+
+func (ndb *nodeDB) cleanPruningInDB() {
+	version, exist := ndb.getPruningRoot()
+	if !exist {
+		return
+	}
+	ndb.log(IavlErr, "start cleanPruningInDB", "name", ndb.name, "version", version)
+	ndb.deleteRoot(nil, version, false, true)
+	batch := ndb.db.NewBatch()
+	defer batch.Close()
 	ndb.deleteOrphans(batch, version)
-	ndb.deleteRoot(batch, version, checkLatestVersion)
+	if err := batch.Write(); err != nil {
+		panic(err)
+	}
+	ndb.deletePruningRoot()
+	ndb.log(IavlErr, "cleanPruningInDB is done", "name", ndb.name, "version", version)
+}
+
+func (ndb *nodeDB) setPruningRoot(version int64, checkLatestVersion bool) {
+	if checkLatestVersion && version == ndb.getLatestVersion() {
+		panic("Tried to delete latest version")
+	}
+	err := ndb.db.Set(metadataKeyFormat.Key([]byte(pruningVersionKey)), []byte(strconv.FormatInt(version, 10)))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (ndb *nodeDB) deletePruningRoot() {
+	err := ndb.db.Delete(metadataKeyFormat.Key([]byte(pruningVersionKey)))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (ndb *nodeDB) getPruningRoot() (int64, bool) {
+	bz, err := ndb.db.Get(metadataKeyFormat.Key([]byte(pruningVersionKey)))
+	if err != nil {
+		panic(err)
+	}
+	if len(bz) == 0 {
+		return 0, false
+	}
+	v, err := strconv.ParseInt(string(bz), 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	return v, true
 }
 
 func (ndb *nodeDB) checkoutVersionReaders(version int64) error {

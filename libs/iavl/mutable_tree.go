@@ -906,7 +906,7 @@ func (tree *MutableTree) deleteVersion(batch dbm.Batch, version int64, versions 
 		return err
 	}
 
-	tree.ndb.deleteVersion(batch, version, true)
+	tree.ndb.deleteVersion(batch, version, true, false)
 
 	return nil
 }
