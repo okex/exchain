@@ -810,6 +810,10 @@ func (app *OKExChainApp) InitUpgrade(ctx sdk.Context) {
 		app.WasmKeeper.UpdateMilestone(ctx, "wasm_v1", info.EffectiveHeight)
 	})
 
+	app.ParamsKeeper.ClaimReadyForUpgrade(tmtypes.MILESTONE_VENUS8_NAME, func(info paramstypes.UpgradeInfo) {
+		tmtypes.InitMilestoneVenus8Height(int64(info.EffectiveHeight))
+	})
+
 	if err := app.ParamsKeeper.ApplyEffectiveUpgrade(ctx); err != nil {
 		tmos.Exit(fmt.Sprintf("failed apply effective upgrade height info: %s", err))
 	}

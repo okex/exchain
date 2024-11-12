@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/okex/exchain/libs/cosmos-sdk/types"
+	"github.com/okex/exchain/libs/tendermint/crypto"
 )
 
 // MultiStakingHooks combines multiple staking hooks, all hook functions are run in array sequence
@@ -17,6 +18,12 @@ func NewMultiStakingHooks(hooks ...StakingHooks) MultiStakingHooks {
 func (h MultiStakingHooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	for i := range h {
 		h[i].AfterValidatorCreated(ctx, valAddr)
+	}
+}
+
+func (h MultiStakingHooks) AfterValidatorPubkeyChanged(ctx sdk.Context, oldAddress sdk.ConsAddress, newAddress sdk.ConsAddress, newPubkey crypto.PubKey) {
+	for i := range h {
+		h[i].AfterValidatorPubkeyChanged(ctx, oldAddress, newAddress, newPubkey)
 	}
 }
 

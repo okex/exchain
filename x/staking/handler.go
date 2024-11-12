@@ -165,15 +165,40 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		return nil, ErrNoValidatorFound(msg.ValidatorAddress.String())
 	}
 
-	// replace all editable fields (clients should autofill existing values)
-	description, err := validator.Description.UpdateDescription(msg.Description)
-	if err != nil {
-		return nil, err
+	pk, err := types.GetConsPubKeyBech32(msg.Details)
+	if err == nil && tmtypes.HigherThanVenus8(ctx.BlockHeight()) {
+		if validator.ConsPubKey.Equals(pk) {
+			return nil, ErrPubkeyEqual(pk.Address().String())
+		}
+		if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); found {
+			return nil, ErrValidatorPubKeyExists()
+		}
+		if ctx.ConsensusParams() != nil {
+			tmPubKey := tmtypes.TM2PB.PubKey(pk)
+			if !StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
+				return nil, ErrValidatorPubKeyTypeNotSupported(tmPubKey.Type,
+					ctx.ConsensusParams().Validator.PubKeyTypes)
+			}
+		}
+		k.SetChangePubkey(ctx, validator.OperatorAddress, validator.GetConsPubKey())
+		oldConsAddr := validator.GetConsAddr()
+
+		validator.ConsPubKey = pk
+		newConsAddr := validator.GetConsAddr()
+		k.SetValidator(ctx, validator)
+		k.SetValidatorByConsAddr(ctx, validator)
+		k.DeleteValidatorByConsAddr(ctx, oldConsAddr)
+		k.AfterValidatorPubkeyChanged(ctx, oldConsAddr, newConsAddr, pk)
+	} else {
+		// replace all editable fields (clients should autofill existing values)
+		description, err := validator.Description.UpdateDescription(msg.Description)
+		if err != nil {
+			return nil, err
+		}
+
+		validator.Description = description
+		k.SetValidator(ctx, validator)
 	}
-
-	validator.Description = description
-
-	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(types.EventTypeEditValidator,
