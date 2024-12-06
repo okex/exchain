@@ -32,7 +32,9 @@ func failRedisClient() *redis_cgi.RedisClient {
 
 func setupTest(t *testing.T) *DeltaContext {
 	dc := newDeltaContext(log.TestingLogger())
-	dc.deltaBroker = getRedisClient(t)
+	rclient := getRedisClient(t)
+	dc.deltaWriter = rclient
+	dc.deltaReader = rclient
 	return dc
 }
 
@@ -108,7 +110,7 @@ func TestDeltaContext_download(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err, mrh := dc.deltaBroker.GetDeltas(tt.height)
+			_, err, mrh := dc.deltaReader.GetDeltas(tt.height)
 			got, got1, got2 := dc.download(tt.height)
 			if !reflect.DeepEqual(got, err) {
 				t.Errorf("download() got = %v, want %v", got, err)
@@ -142,7 +144,7 @@ func TestDeltaContext_upload(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dc.deltaBroker = tt.r
+			dc.deltaWriter = tt.r
 			if got := dc.upload(tt.deltas, 0, 0); got != tt.want {
 				t.Errorf("upload() = %v, want %v", got, tt.want)
 			}

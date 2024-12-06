@@ -9,6 +9,7 @@ import (
 	"github.com/okex/exchain/libs/iavl"
 	"github.com/okex/exchain/libs/system"
 	"github.com/okex/exchain/libs/tendermint/delta"
+	persist_delta "github.com/okex/exchain/libs/tendermint/delta/persist-delta"
 	redis_cgi "github.com/okex/exchain/libs/tendermint/delta/redis-cgi"
 	"github.com/okex/exchain/libs/tendermint/libs/log"
 	"github.com/spf13/viper"
@@ -64,7 +65,8 @@ func SetWasmWatchDataManager(manager WatchDataManager) {
 }
 
 type DeltaContext struct {
-	deltaBroker       delta.DeltaBroker
+	deltaReader       delta.DeltaReader
+	deltaWriter       delta.DeltaWriter
 	lastFetchedHeight int64
 	dataMap           *deltaMap
 
@@ -104,8 +106,28 @@ func newDeltaContext(l log.Logger) *DeltaContext {
 }
 
 func (dc *DeltaContext) init() {
+	// TODO: how to get buffer size & redis expire from cmdline
+	// if only using delta-mode & delta-service-url?
+	dc.bufferSize = viper.GetInt(types.FlagBufferSize)
+	if dc.bufferSize < 5 {
+		dc.bufferSize = 5
+	}
+	expire := time.Duration(viper.GetInt(types.FlagRedisExpire)) * time.Second
+	var err error
 
-	if dc.uploadDelta || dc.downloadDelta {
+	if types.IsDeltaModeUp() {
+		dc.deltaWriter, err = redis_cgi.NewRedisClientWithURL(types.DeltaServceURL(), expire, dc.logger)
+		if err != nil {
+			panic(err)
+		}
+	} else if types.IsDeltaModeDownRedis() {
+		dc.deltaReader, err = redis_cgi.NewRedisClientWithURL(types.DeltaServceURL(), expire, dc.logger)
+		if err != nil {
+			panic(err)
+		}
+	} else if types.IsDeltaModeDownPersist() {
+		dc.deltaReader = persist_delta.NewPersistDeltaClient(types.DeltaServceURL(), dc.logger)
+	} else if dc.uploadDelta || dc.downloadDelta {
 		dc.bufferSize = viper.GetInt(types.FlagBufferSize)
 		if dc.bufferSize < 5 {
 			dc.bufferSize = 5
@@ -117,7 +139,13 @@ func (dc *DeltaContext) init() {
 		if dbNum < 0 || dbNum > 15 {
 			panic("delta-redis-db only support 0~15")
 		}
-		dc.deltaBroker = redis_cgi.NewRedisClient(url, auth, expire, dbNum, dc.logger)
+		rclient := redis_cgi.NewRedisClient(url, auth, expire, dbNum, dc.logger)
+		if dc.uploadDelta {
+			dc.deltaWriter = rclient
+		}
+		if dc.downloadDelta {
+			dc.deltaReader = rclient
+		}
 		dc.logger.Info("Init delta broker", "url", url)
 	}
 
@@ -229,19 +257,19 @@ func (dc *DeltaContext) uploadRoutine(deltas *types.Deltas, txnum float64) {
 		return
 	}
 	dc.missed += txnum
-	locked := dc.deltaBroker.GetLocker()
+	locked := dc.deltaWriter.GetLocker()
 	dc.logger.Info("Try to upload delta:", "target-height", deltas.Height, "locked", locked, "delta", deltas)
 
 	if !locked {
 		return
 	}
 
-	defer dc.deltaBroker.ReleaseLocker()
+	defer dc.deltaWriter.ReleaseLocker()
 
 	upload := func(mrh int64) bool {
 		return dc.upload(deltas, txnum, mrh)
 	}
-	reset, mrh, err := dc.deltaBroker.ResetMostRecentHeightAfterUpload(deltas.Height, upload)
+	reset, mrh, err := dc.deltaWriter.ResetMostRecentHeightAfterUpload(deltas.Height, upload)
 	if !reset {
 		dc.logger.Info("Failed to reset mrh:",
 			"target-height", deltas.Height,
@@ -275,7 +303,7 @@ func (dc *DeltaContext) upload(deltas *types.Deltas, txnum float64, mrh int64) b
 
 	t2 := time.Now()
 	// set into dds
-	if err = dc.deltaBroker.SetDeltas(deltas.Height, deltaBytes); err != nil {
+	if err = dc.deltaWriter.SetDeltas(deltas.Height, deltaBytes); err != nil {
 		dc.logger.Error("Failed to upload delta", "target-height", deltas.Height,
 			"mrh", mrh, "error", err)
 		return false
@@ -447,7 +475,7 @@ func (dc *DeltaContext) download(height int64) (error, *types.Deltas, int64) {
 	dc.logger.Debug("Download delta started:", "target-height", height)
 
 	t0 := time.Now()
-	deltaBytes, err, latestHeight := dc.deltaBroker.GetDeltas(height)
+	deltaBytes, err, latestHeight := dc.deltaReader.GetDeltas(height)
 	if err != nil {
 		return err, nil, latestHeight
 	}

@@ -71,10 +71,34 @@ var (
 			configA: boolItem{name: consensus.EnablePrerunTx, expect: true},
 			configB: boolItem{name: types.FlagDownloadDDS, expect: true},
 		},
+		// --enable-preruntx conflict with --delta-mode down-redis|down-persist
+		{
+			configA: boolItem{name: consensus.EnablePrerunTx, expect: true},
+			configB: funcItem{
+				name:   types.FlagDeltaMode,
+				expect: true,
+				actual: false,
+				f: func() bool {
+					return types.IsDeltaModeDownload(viper.GetString(types.FlagDeltaMode))
+				},
+			},
+		},
 		// --multi-cache conflict with --download-delta
 		{
 			configA: boolItem{name: sdk.FlagMultiCache, expect: true},
 			configB: boolItem{name: types.FlagDownloadDDS, expect: true},
+		},
+		// --multi-cache conflict with --delta-mode down-redis|down-persist
+		{
+			configA: boolItem{name: sdk.FlagMultiCache, expect: true},
+			configB: funcItem{
+				name:   types.FlagDeltaMode,
+				expect: true,
+				actual: false,
+				f: func() bool {
+					return types.IsDeltaModeDownload(viper.GetString(types.FlagDeltaMode))
+				},
+			},
 		},
 		{
 			configA: stringItem{name: apptype.FlagNodeMode, expect: string(apptype.RpcNode)},

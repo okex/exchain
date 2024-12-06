@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-redis/redis/v8"
+	"github.com/okex/exchain/libs/tendermint/delta/internal"
 	"github.com/okex/exchain/libs/tendermint/libs/log"
 	"github.com/okex/exchain/libs/tendermint/types"
 	"sync"
@@ -38,6 +39,20 @@ type RedisClient struct {
 	rdb    *redis.Client
 	ttl    time.Duration
 	logger log.Logger
+}
+
+func NewRedisClientWithURL(redisURL string, ttl time.Duration, l log.Logger) (*RedisClient, error) {
+	opt, err := redis.ParseURL(redisURL)
+	if err != nil {
+		l.Error("parse redis url error", err)
+		return nil, err
+	}
+
+	rdb := redis.NewClient(opt)
+	redisClient := RedisClient{rdb, ttl, l}
+	redisClient.init()
+
+	return &redisClient, nil
 }
 
 func NewRedisClient(url, auth string, ttl time.Duration, db int, l log.Logger) *RedisClient {
@@ -142,5 +157,5 @@ func genBlockKey(height int64) string {
 }
 
 func genDeltaKey(height int64) string {
-	return fmt.Sprintf("DH-%d:%d", types.DeltaVersion, height)
+	return internal.GenDeltaKey(height)
 }

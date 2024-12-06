@@ -4,6 +4,7 @@ import (
 	apptype "github.com/okex/exchain/app/types"
 	"github.com/okex/exchain/libs/cosmos-sdk/server"
 	"github.com/okex/exchain/libs/cosmos-sdk/store/types"
+	sdk "github.com/okex/exchain/libs/cosmos-sdk/types"
 	"github.com/okex/exchain/libs/tendermint/consensus"
 	"github.com/okex/exchain/libs/tendermint/state"
 	sm "github.com/okex/exchain/libs/tendermint/state"
@@ -75,6 +76,40 @@ func getCommandDeliverTxsExecModeSerial(v int) *cobra.Command {
 	})
 }
 
+func getCommandEnableMultiCacheDeltaModeDownload(downMode string) *cobra.Command {
+	return getCommand([]universeFlag{
+		&boolFlag{
+			Name:    sdk.FlagMultiCache,
+			Default: false,
+			Changed: true,
+			Value:   true,
+		},
+		&stringFlag{
+			Name:    ttypes.FlagDeltaMode,
+			Default: ttypes.DefaultDeltaMode(),
+			Changed: true,
+			Value:   downMode,
+		},
+	})
+}
+
+func getCommandEnablePreruntxdDeltaModeDownload(downMode string) *cobra.Command {
+	return getCommand([]universeFlag{
+		&boolFlag{
+			Name:    consensus.EnablePrerunTx,
+			Default: false,
+			Changed: true,
+			Value:   true,
+		},
+		&stringFlag{
+			Name:    ttypes.FlagDeltaMode,
+			Default: ttypes.DefaultDeltaMode(),
+			Changed: true,
+			Value:   downMode,
+		},
+	})
+}
+
 func TestCheckStart(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -88,6 +123,10 @@ func TestCheckStart(t *testing.T) {
 		{name: "1. conflicts --fast-query and --pruning=nothing", cmdFunc: func() { getCommandFastQueryPruningNothing() }, wantErr: true},
 		{name: "2. conflicts --enable-preruntx and --download-delta", cmdFunc: func() { getCommandEnablePreruntxDownloadDelta() }, wantErr: true},
 		{name: "3. conflicts --node-mod=rpc and --pruning=nothing", cmdFunc: func() { getCommandNodeModeRpcPruningNothing() }, wantErr: true},
+		{name: "4. conflicts --multi-cache and --delta-mode down-redis", cmdFunc: func() { getCommandEnableMultiCacheDeltaModeDownload("down-redis") }, wantErr: true},
+		{name: "5. conflicts --multi-cache and --delta-mode down-persist", cmdFunc: func() { getCommandEnableMultiCacheDeltaModeDownload("down-persist") }, wantErr: true},
+		{name: "6. conflicts --enable-preruntx and --delta-mode down-redis", cmdFunc: func() { getCommandEnablePreruntxdDeltaModeDownload("down-redis") }, wantErr: true},
+		{name: "7. conflicts --enable-preruntx and --delta-mode down-persist", cmdFunc: func() { getCommandEnablePreruntxdDeltaModeDownload("down-persist") }, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

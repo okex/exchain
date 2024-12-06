@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -182,6 +183,8 @@ func RegisterServerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().String(FlagEvmImportPath, "", "Evm contract & storage db or files used for InitGenesis")
 	cmd.Flags().Uint64(FlagGoroutineNum, 0, "Limit on the number of goroutines used to import evm data(ignored if evm-import-mode is 'default')")
 
+	cmd.Flags().String(tmtypes.FlagDeltaMode, tmtypes.DefaultDeltaMode(), fmt.Sprintf("delta mode. %s", strings.Join(tmtypes.AllDeltaModes(), "|")))
+	cmd.Flags().String(tmtypes.FlagDeltaServiceURL, "", fmt.Sprintf("delta service url. Remember to escape special words, e.g. 'redis://pwd%%ac@localhost' should be 'redis://pwd%%25ac@localhost'"))
 	cmd.Flags().Bool(tmtypes.FlagDownloadDDS, false, "Download delta")
 	cmd.Flags().Bool(tmtypes.FlagUploadDDS, false, "Upload delta")
 	cmd.Flags().Bool(tmtypes.FlagAppendPid, false, "Append pid to the identity of delta producer")

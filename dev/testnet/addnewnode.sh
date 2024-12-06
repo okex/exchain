@@ -10,7 +10,7 @@ set -m
 set -x # activate debugging
 
 PRERUN=false
-while getopts "i:n:p:r:s:b:dux" opt; do
+while getopts "i:n:p:r:s:b:duxm" opt; do
   case $opt in
     i)
       echo "IP=$OPTARG"
@@ -23,6 +23,12 @@ while getopts "i:n:p:r:s:b:dux" opt; do
     d)
       echo "DOWNLOAD_DELTA=$OPTARG"
       DOWNLOAD_DELTA="--download-delta=true"
+      MULTI_CACHE="--multi-cache=false"
+      ;;
+    m)
+      echo "DELTA_MODE=down-persist"
+      DELTA_MODE="--delta-mode=down-persist"
+      DELTA_SERVICE="--delta-service-url=http://localhost:8077"
       MULTI_CACHE="--multi-cache=false"
       ;;
     u)
@@ -154,6 +160,8 @@ start() {
     --append-pid \
     ${UPLOAD_DELTA} \
     ${DOWNLOAD_DELTA} \
+    ${DELTA_MODE} \
+    ${DELTA_SERVICE} \
     ${MULTI_CACHE} \
     --p2p.addr_book_strict=false \
     --enable-preruntx=${PRERUN} \

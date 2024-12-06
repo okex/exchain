@@ -347,6 +347,7 @@ func SetExternalPackageValue(cmd *cobra.Command) {
 	tmtypes.BlockCompressType = viper.GetInt(tmtypes.FlagBlockCompressType)
 	tmtypes.BlockCompressFlag = viper.GetInt(tmtypes.FlagBlockCompressFlag)
 	tmtypes.BlockCompressThreshold = viper.GetInt(tmtypes.FlagBlockCompressThreshold)
+	tmtypes.InitDeltaFlagInfo(viper.GetString(tmtypes.FlagDeltaMode), viper.GetString(tmtypes.FlagDeltaServiceURL))
 
 	mpt.TrieCommitGap = viper.GetInt64(FlagCommitGapHeight)
 
