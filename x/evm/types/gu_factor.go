@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -28,6 +29,9 @@ func (factor GuFactor) ValidateBasic() error {
 func UnmarshalGuFactor(data string) (GuFactor, error) {
 	var factor GuFactor
 	err := json.Unmarshal([]byte(data), &factor)
+	if factor.Factor.IsNil() {
+		return factor, fmt.Errorf("json unmarshal failed: %v", err)
+	}
 	return factor, err
 }
 
