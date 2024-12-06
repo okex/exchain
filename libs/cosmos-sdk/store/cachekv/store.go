@@ -3,7 +3,6 @@ package cachekv
 import (
 	"bytes"
 	"io"
-	"reflect"
 	"sort"
 	"sync"
 	"unsafe"
@@ -376,12 +375,7 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 // to be used generally, but for a specific pattern to check for available
 // keys within a domain.
 func strToByte(s string) []byte {
-	var b []byte
-	hdr := (*reflect.SliceHeader)(unsafe.Pointer(&b))
-	hdr.Cap = len(s)
-	hdr.Len = len(s)
-	hdr.Data = (*reflect.StringHeader)(unsafe.Pointer(&s)).Data
-	return b
+	return unsafe.Slice((*byte)(unsafe.Pointer(unsafe.StringData(s))), len(s))
 }
 
 // byteSliceToStr is meant to make a zero allocation conversion
@@ -389,8 +383,7 @@ func strToByte(s string) []byte {
 // to be used generally, but for a specific pattern to delete keys
 // from a map.
 func byteSliceToStr(b []byte) string {
-	hdr := (*reflect.StringHeader)(unsafe.Pointer(&b))
-	return *(*string)(unsafe.Pointer(hdr))
+	return unsafe.String(unsafe.SliceData(b), len(b))
 }
 
 // Constructs a slice of dirty items, to use w/ memIterator.
